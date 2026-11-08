@@ -75,17 +75,14 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <!-- NOTIFICATION ENABLE BUTTON -->
         <button id="btnEnableNotif" onclick="requestNotificationPermission()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1">
           <span>🔔</span> Notif
         </button>
 
-        <!-- PWA INSTALL BUTTON -->
         <button id="btnPWAInstall" onclick="triggerPWAInstall()" class="hidden bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 text-[11px] font-extrabold px-3 py-1.5 rounded-full flex items-center gap-1 animate-pulse">
           <span>📲</span> Install
         </button>
 
-        <!-- ALERT PILL BUTTON -->
         <button onclick="navToGarasiAlerts()" id="headerAlertBtn" class="relative bg-slate-900/90 hover:bg-slate-800 active:scale-95 transition-all text-xs text-slate-200 px-3 py-1.5 rounded-full border border-slate-700/80 flex items-center gap-1.5 shadow-inner">
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -103,7 +100,6 @@
     <!-- TAB 1: DASHBOARD -->
     <section id="tab-dashboard" class="tab-content space-y-4">
       
-      <!-- FORECAST BUDGET BANNER -->
       <div class="bg-gradient-to-br from-indigo-950 via-slate-900 to-android-card border border-indigo-500/30 rounded-3xl p-4 shadow-2xl relative overflow-hidden">
         <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl pointer-events-none"></div>
         <div class="flex items-center justify-between mb-2">
@@ -123,33 +119,25 @@
         </div>
       </div>
 
-      <!-- GARASI RINGKAS -->
       <div>
         <div class="flex items-center justify-between mb-3 px-1">
           <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Garasi Ringkas</h2>
           <button onclick="switchTab('garasi')" class="text-xs text-brand-400 font-bold hover:underline">Kelola Garasi &rarr;</button>
         </div>
-        <div id="dashboardMotorCards" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <!-- Rendered via JS -->
-        </div>
+        <div id="dashboardMotorCards" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
       </div>
 
-      <!-- RIWAYAT SERVIS TERAKHIR -->
       <div class="glass-card rounded-3xl p-4 space-y-3">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Catatan Servis Terakhir</h3>
           <button onclick="switchTab('riwayat')" class="text-xs text-brand-400 font-bold">Semua Log</button>
         </div>
-        <div id="dashboardRecentLogs" class="space-y-2.5">
-          <!-- Rendered via JS -->
-        </div>
+        <div id="dashboardRecentLogs" class="space-y-2.5"></div>
       </div>
     </section>
 
-    <!-- TAB 2: GARASI (FOKUS 1 MOTOR TERPILIH) -->
+    <!-- TAB 2: GARASI -->
     <section id="tab-garasi" class="tab-content hidden space-y-4">
-      
-      <!-- PUSAT ALERT (PAJAK H-30 + SPAREPART KRITIS) -->
       <div id="alertCenterGarasi" class="glass-card border-amber-500/30 rounded-3xl p-4 space-y-3 shadow-xl">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-extrabold text-white flex items-center gap-2">
@@ -159,12 +147,9 @@
         </div>
         <p class="text-xs text-slate-400">Merangkum sisa umur sparepart & pengingat Pajak STNK / Plat 5 Tahun.</p>
         
-        <div id="alertCenterList" class="space-y-2 pt-1">
-          <!-- Rendered via JS -->
-        </div>
+        <div id="alertCenterList" class="space-y-2 pt-1"></div>
       </div>
 
-      <!-- DAFTAR MOTOR & SELEKTOR TABS -->
       <div class="space-y-3">
         <div class="flex items-center justify-between px-1">
           <h2 class="text-sm font-extrabold text-slate-200">Kelola Garasi Motor</h2>
@@ -173,17 +158,12 @@
           </button>
         </div>
 
-        <div id="garasiMotorTabs" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <!-- Rendered via JS -->
-        </div>
-
-        <div id="garasiSingleMotorView" class="space-y-4">
-          <!-- Rendered via JS -->
-        </div>
+        <div id="garasiMotorTabs" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
+        <div id="garasiSingleMotorView" class="space-y-4"></div>
       </div>
     </section>
 
-    <!-- TAB 3: RIWAYAT LOG SERVIS & PAJAK (PEMISAHAN TAB SERVIS VS PAJAK) -->
+    <!-- TAB 3: RIWAYAT -->
     <section id="tab-riwayat" class="tab-content hidden space-y-3">
       <div class="flex items-center justify-between px-1">
         <h2 class="text-sm font-extrabold text-slate-200">Riwayat & Kwitansi</h2>
@@ -192,7 +172,6 @@
         </select>
       </div>
 
-      <!-- SUB-TABS: SERVIS VS PAJAK -->
       <div class="grid grid-cols-2 gap-2 bg-slate-900/90 p-1 rounded-2xl border border-slate-800">
         <button onclick="switchRiwayatSubTab('servis')" id="subTabServisBtn" class="py-2 text-xs font-bold rounded-xl transition-all bg-brand-600 text-white shadow">
           🛠️ Servis Motor
@@ -202,12 +181,10 @@
         </button>
       </div>
 
-      <div id="riwayatLogList" class="space-y-3">
-        <!-- Rendered via JS -->
-      </div>
+      <div id="riwayatLogList" class="space-y-3"></div>
     </section>
 
-    <!-- TAB 4: ANALISIS BIAYA -->
+    <!-- TAB 4: ANALISIS -->
     <section id="tab-analisis" class="tab-content hidden space-y-4">
       <div class="glass-card rounded-3xl p-4 space-y-3">
         <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Grafik Pengeluaran Per Motor</h2>
@@ -221,15 +198,12 @@
           <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Estimasi Belanja Part (30 Hari)</h2>
           <span class="text-[10px] text-slate-400 font-mono">Berdasarkan Usia</span>
         </div>
-        <div id="analisisForecastList" class="space-y-2">
-          <!-- Rendered via JS -->
-        </div>
+        <div id="analisisForecastList" class="space-y-2"></div>
       </div>
     </section>
 
-    <!-- TAB 5: PENGATURAN & KELOLA PART -->
+    <!-- TAB 5: PENGATURAN -->
     <section id="tab-pengaturan" class="tab-content hidden space-y-4">
-      
       <div class="glass-card rounded-3xl p-4 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
@@ -247,18 +221,14 @@
           <h3 class="text-xs font-bold text-brand-400 uppercase tracking-wider flex items-center gap-1">
             <span>🔄</span> Kelompok Servis Rutin
           </h3>
-          <div id="settingsPartsRutinList" class="space-y-2">
-            <!-- Rendered via JS -->
-          </div>
+          <div id="settingsPartsRutinList" class="space-y-2"></div>
         </div>
 
         <div class="space-y-2 pt-2 border-t border-slate-800">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
             <span>⚡</span> Kelompok Servis Satuan (Insidental)
           </h3>
-          <div id="settingsPartsSatuanList" class="space-y-2">
-            <!-- Rendered via JS -->
-          </div>
+          <div id="settingsPartsSatuanList" class="space-y-2"></div>
         </div>
 
         <button onclick="resetPartsToDefault()" class="w-full text-center text-xs text-slate-400 hover:text-slate-200 py-2 border border-dashed border-slate-800 rounded-xl font-medium">
@@ -327,7 +297,7 @@
     </div>
   </nav>
 
-  <!-- MODAL: BAYAR PAJAK + UPLOAD STRUK STNK + NOMINAL BIAYA -->
+  <!-- MODAL: BAYAR PAJAK -->
   <div id="modalBayarPajak" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-end justify-center no-print">
     <div class="bg-android-card border-t border-slate-700/80 w-full max-w-md rounded-t-3xl p-5 space-y-4 shadow-2xl">
       <div class="w-12 h-1 bg-slate-600 rounded-full mx-auto mb-1 opacity-60"></div>
@@ -360,7 +330,6 @@
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1">Upload Foto Struk / STNK (Opsional)</label>
           <input type="file" id="inputPajakFotoFile" accept="image/*" onchange="previewFotoPajak(event)" class="w-full bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-2xl p-2 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand-600 file:text-white hover:file:bg-brand-500">
-          <p class="text-[10px] text-slate-500 mt-1">Foto dikompresi otomatis & tersimpan aman di HP.</p>
         </div>
 
         <div id="previewPajakFotoContainer" class="hidden relative rounded-2xl overflow-hidden border border-slate-700 max-h-36 bg-black">
@@ -375,13 +344,13 @@
     </div>
   </div>
 
-  <!-- MODAL: PREVIEW LIGHTBOX FOTO STRUK -->
+  <!-- MODAL: PREVIEW LIGHTBOX -->
   <div id="modalLightbox" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4 no-print" onclick="closeLightbox()">
     <img id="lightboxImage" class="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl border border-slate-700" src="#" alt="Nota Struk">
     <p class="text-xs text-slate-400 mt-3 font-medium">Sentuh di mana saja untuk menutup</p>
   </div>
 
-  <!-- MODAL: POP-UP DETAIL SPAREPART -->
+  <!-- MODAL: DETAIL PART -->
   <div id="modalDetailPart" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-end justify-center no-print">
     <div class="bg-android-card border-t border-slate-700/80 w-full max-w-md rounded-t-3xl max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl">
       <div class="w-12 h-1 bg-slate-600 rounded-full mx-auto mb-1 opacity-60"></div>
@@ -408,7 +377,7 @@
     </div>
   </div>
 
-  <!-- MODAL: CATAT SERVIS / PERBAIKAN -->
+  <!-- MODAL: CATAT SERVIS -->
   <div id="modalCatatServis" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden flex items-end justify-center no-print">
     <div class="bg-android-card border-t border-slate-700/80 w-full max-w-md rounded-t-3xl max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl">
       <div class="w-12 h-1 bg-slate-600 rounded-full mx-auto mb-1 opacity-60"></div>
@@ -492,7 +461,7 @@
     </div>
   </div>
 
-  <!-- MODAL: EDIT/ADD PART (SETTINGS) -->
+  <!-- MODAL: ADD/EDIT PART -->
   <div id="modalAddPart" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden flex items-end justify-center no-print">
     <div class="bg-android-card border-t border-slate-700/80 w-full max-w-md rounded-t-3xl p-5 space-y-4">
       <div class="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -610,24 +579,55 @@
     </div>
   </div>
 
-  <!-- MODAL: FACTORY RESET CONFIRMATION -->
-  <div id="modalResetConfirm" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 no-print">
+  <!-- MODAL: FACTORY RESET WITH DOUBLE CONFIRMATION -->
+  <div id="modalResetConfirm" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4 no-print">
     <div class="bg-android-card border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 text-center shadow-2xl">
-      <div class="w-12 h-12 bg-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto text-2xl font-black">
-        ⚠️
+      
+      <!-- TAHAP 1 CONFIRMATION -->
+      <div id="resetStep1" class="space-y-4">
+        <div class="w-12 h-12 bg-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto text-2xl font-black">
+          ⚠️
+        </div>
+        <div>
+          <span class="text-[10px] bg-rose-500/20 text-rose-300 font-bold px-2 py-0.5 rounded-full uppercase">Tahap 1 dari 2</span>
+          <h3 class="text-base font-extrabold text-white mt-2">Reset Total Data Garasi?</h3>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+            Seluruh data motor, status kesehatan, dan riwayat servis akan dihapus. <span class="text-emerald-400 font-bold">Daftar sparepart & interval tetap tersimpan aman.</span>
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="closeModalResetConfirm()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-2xl text-xs">
+            Batal
+          </button>
+          <button onclick="goToResetStep2()" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-2xl text-xs shadow-lg">
+            Lanjut &rarr; (1/2)
+          </button>
+        </div>
       </div>
-      <div>
-        <h3 class="text-base font-extrabold text-white">Reset Total Data Garasi?</h3>
-        <p class="text-xs text-slate-400 mt-1">Seluruh motor, status kesehatan, dan riwayat servis akan dihapus. <span class="text-emerald-400 font-bold">Daftar sparepart & interval tetap aman.</span></p>
+
+      <!-- TAHAP 2 CONFIRMATION (KETIK "HAPUS") -->
+      <div id="resetStep2" class="hidden space-y-4">
+        <div class="w-12 h-12 bg-rose-600 text-white rounded-full flex items-center justify-center mx-auto text-2xl font-black animate-bounce">
+          🔥
+        </div>
+        <div>
+          <span class="text-[10px] bg-rose-500/20 text-rose-300 font-bold px-2 py-0.5 rounded-full uppercase">Tahap 2 dari 2 (Konfirmasi Final)</span>
+          <h3 class="text-base font-extrabold text-white mt-2">Ketik "HAPUS" untuk Memproses</h3>
+          <p class="text-[11px] text-slate-400 mt-1">Tindakan ini tidak dapat dibatalkan kembali.</p>
+        </div>
+        <div>
+          <input type="text" id="inputConfirmResetText" oninput="validateResetInput()" placeholder="Ketik HAPUS di sini" class="w-full bg-slate-900 border border-slate-700 text-white text-center font-bold tracking-widest rounded-2xl px-3 py-2.5 text-xs uppercase focus:ring-2 focus:ring-rose-500">
+        </div>
+        <div class="flex gap-2">
+          <button onclick="goToResetStep1()" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-2xl text-xs">
+            &larr; Kembali
+          </button>
+          <button id="btnFinalExecuteReset" onclick="executeFactoryReset()" disabled class="flex-1 bg-rose-900/40 text-slate-500 font-black py-3 rounded-2xl text-xs cursor-not-allowed transition-all">
+            🔥 HAPUS SEMUA (2/2)
+          </button>
+        </div>
       </div>
-      <div class="flex gap-2">
-        <button onclick="closeModalResetConfirm()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-2xl text-xs">
-          Batal
-        </button>
-        <button onclick="executeFactoryReset()" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-2xl text-xs shadow-lg">
-          Ya, Hapus Data Garasi
-        </button>
-      </div>
+
     </div>
   </div>
 
@@ -658,7 +658,7 @@
     let selectedGarasiMotorId = null;
     let activeDetailMotorId = null;
     let activeDetailPartId = null;
-    let activeRiwayatSubTab = 'servis'; // 'servis' or 'pajak'
+    let activeRiwayatSubTab = 'servis';
     let chartInstance = null;
     let tempFotoBase64 = null;
     let deferredPrompt = null;
@@ -671,7 +671,6 @@
       document.getElementById('inputServisTanggal').value = new Date().toISOString().split('T')[0];
     });
 
-    // PWA ENABLER & PUSH NOTIFICATION ENGINE
     function setupPWAEngine() {
       const manifestData = {
         name: "MotoCare Pro",
@@ -719,14 +718,11 @@
     }
 
     function requestNotificationPermission() {
-      if (!('Notification' in window)) {
-        alert('Browser HP Anda tidak mendukung Notifikasi Web.');
-        return;
-      }
+      if (!('Notification' in window)) return;
       Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
           new Notification('MotoCare Pro Enabled! 🔔', {
-            body: 'Notifikasi pengingat pajak H-30 & servis motor aktif di HP Anda.',
+            body: 'Notifikasi pengingat pajak H-30 & servis motor aktif.',
             icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="25" fill="%232563eb"/><text x="50" y="68" font-size="50" font-weight="900" text-anchor="middle" fill="white">MC</text></svg>'
           });
           document.getElementById('btnEnableNotif').innerText = '🔔 Aktif';
@@ -738,7 +734,6 @@
     function checkAndSendPushAlerts() {
       if ('Notification' in window && Notification.permission === 'granted') {
         let alertMessages = [];
-
         motors.forEach(m => {
           const pTahunan = checkPajakStatus(m.pajakTahunan);
           if (pTahunan.isDue) {
@@ -1151,7 +1146,6 @@
       singleContainer.appendChild(div);
     }
 
-    // MODAL BAYAR PAJAK + UPLOAD STRUK + NOMINAL PAJAK
     function openModalBayarPajak(motorId, type) {
       const m = motors.find(item => item.id === motorId);
       if (!m) return;
@@ -1253,7 +1247,6 @@
       renderAllViews();
     }
 
-    // SUB-TAB NAVIGATION IN RIWAYAT (SERVIS VS PAJAK)
     function switchRiwayatSubTab(type) {
       activeRiwayatSubTab = type;
       const btnServis = document.getElementById('subTabServisBtn');
@@ -1270,7 +1263,6 @@
       renderRiwayatList();
     }
 
-    // RIWAYAT LOG RENDERER
     function renderRiwayatList() {
       const container = document.getElementById('riwayatLogList');
       const filterValue = document.getElementById('filterMotorLog').value;
@@ -1785,6 +1777,41 @@
       renderAllViews();
     }
 
+    // FACTORY RESET DOUBLE CONFIRMATION HANDLERS
+    function openModalResetConfirm() {
+      goToResetStep1();
+      document.getElementById('modalResetConfirm').classList.remove('hidden');
+    }
+
+    function closeModalResetConfirm() {
+      document.getElementById('modalResetConfirm').classList.add('hidden');
+    }
+
+    function goToResetStep1() {
+      document.getElementById('resetStep1').classList.remove('hidden');
+      document.getElementById('resetStep2').classList.add('hidden');
+      document.getElementById('inputConfirmResetText').value = '';
+    }
+
+    function goToResetStep2() {
+      document.getElementById('resetStep1').classList.add('hidden');
+      document.getElementById('resetStep2').classList.remove('hidden');
+      document.getElementById('inputConfirmResetText').value = '';
+      validateResetInput();
+    }
+
+    function validateResetInput() {
+      const val = document.getElementById('inputConfirmResetText').value.trim().toUpperCase();
+      const btn = document.getElementById('btnFinalExecuteReset');
+      if (val === 'HAPUS') {
+        btn.disabled = false;
+        btn.className = 'flex-1 bg-rose-600 hover:bg-rose-500 text-white font-black py-3 rounded-2xl text-xs shadow-lg shadow-rose-600/50 cursor-pointer active:scale-95 transition-all';
+      } else {
+        btn.disabled = true;
+        btn.className = 'flex-1 bg-rose-900/40 text-slate-500 font-black py-3 rounded-2xl text-xs cursor-not-allowed transition-all';
+      }
+    }
+
     function executeFactoryReset() {
       const preservedParts = [...partsConfig];
       localStorage.clear();
@@ -1883,9 +1910,6 @@
       document.getElementById('btnDeleteMotor').classList.add('hidden');
       document.getElementById('formAddMotor').reset();
     }
-
-    function openModalResetConfirm() { document.getElementById('modalResetConfirm').classList.remove('hidden'); }
-    function closeModalResetConfirm() { document.getElementById('modalResetConfirm').classList.add('hidden'); }
 
     function renderChartBiaya() {
       const ctx = document.getElementById('chartBiayaMotor').getContext('2d');
