@@ -1,2007 +1,1147 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-950">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MotoCare Pro Mobile - Catatan & Pengingat Servis Motor</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Vue 3 CDN -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            400: '#38bdf8',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            700: '#075985',
-                            800: '#0c4a6e',
-                            900: '#0f172a'
-                        }
-                    }
-                }
-            }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MotoCare Pro - Pengingat & Catatan Servis Motor</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            brand: {
+              50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 900: '#1e3a8a'
+            },
+            darkbg: '#0f172a', cardbg: '#1e293b', cardborder: '#334155'
+          }
         }
-    </script>
-    <style>
-        [v-cloak] { display: none !important; }
-        
-        /* Mobile Touch & Scroll Optimizations */
-        * {
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* Bottom Sheet Animation */
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        .animate-bottom-sheet {
-            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0b0f19; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .bottom-nav { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-top: 1px solid #1e293b; }
+    .bottom-sheet { transition: transform 0.3s ease-in-out; }
+    .bottom-sheet-hidden { transform: translateY(100%); }
+    .bottom-sheet-visible { transform: translateY(0); }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased h-full overflow-x-hidden selection:bg-brand-500 selection:text-white">
+<body class="pb-24 antialiased selection:bg-brand-500 selection:text-white">
 
-<div id="app" v-cloak class="min-h-screen flex flex-col max-w-md mx-auto bg-slate-900 border-x border-slate-800 shadow-2xl relative pb-24">
+  <!-- TOP HEADER MOBILE -->
+  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center font-black text-white shadow-lg shadow-brand-500/30 text-lg">
+          M
+        </div>
+        <div>
+          <h1 class="text-base font-bold leading-tight text-white flex items-center gap-1.5">
+            MotoCare Pro <span class="bg-brand-500/20 text-brand-400 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Time Auto</span>
+          </h1>
+          <p class="text-[11px] text-slate-400">Garasi & Perawatan Motor</p>
+        </div>
+      </div>
 
-    <!-- MOBILE TOP APP BAR -->
-    <header class="bg-slate-900/95 backdrop-blur-md text-white sticky top-0 z-30 border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center space-x-2.5 cursor-pointer" @click="activeTab = 'garasi'">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-brand-500/20">
-                <i class="fa-solid fa-motorcycle text-lg text-white"></i>
-            </div>
-            <div>
-                <h1 class="text-base font-extrabold tracking-tight text-white flex items-center gap-1.5 leading-none">
-                    MotoCare <span class="bg-brand-500 text-[9px] text-white px-1.5 py-0.5 rounded-md font-extrabold tracking-wider">PRO</span>
-                </h1>
-                <p class="text-[10px] text-slate-400 font-medium mt-0.5">Mobile Android Edition</p>
-            </div>
+      <!-- NOTIFICATION PILL BUTTON -->
+      <button onclick="navToGarasiAlerts()" id="headerAlertBtn" class="relative bg-slate-800 hover:bg-slate-700 active:scale-95 transition-all text-xs text-slate-200 px-3 py-1.5 rounded-full border border-slate-700 flex items-center gap-1.5 font-medium">
+        <span>🚨</span>
+        <span id="headerAlertCount" class="font-bold text-amber-400">0 Alert</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER (MOBILE MAX-WIDTH 480px CONTAINER) -->
+  <main class="max-w-md mx-auto px-4 pt-4 space-y-5">
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-dashboard" class="tab-content space-y-4">
+      
+      <!-- QUICK BUDGET FORECAST BANNER -->
+      <div class="bg-gradient-to-br from-indigo-900/40 via-slate-900 to-slate-900 border border-indigo-500/30 rounded-2xl p-4 relative overflow-hidden shadow-xl">
+        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-indigo-300 uppercase tracking-wider flex items-center gap-1">
+            <span>💡</span> Forecast Budget Servis (30 Hari)
+          </span>
+          <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full">Berdasarkan Usia Part</span>
+        </div>
+        <div class="flex items-baseline justify-between">
+          <div>
+            <div id="dashboardForecastAmount" class="text-2xl font-extrabold text-white">Rp 0</div>
+            <p id="dashboardForecastDesc" class="text-xs text-slate-400 mt-0.5">Semua part motor masih aman</p>
+          </div>
+          <button onclick="switchTab('analisis')" class="text-xs text-brand-400 hover:underline font-medium flex items-center gap-0.5">
+            Rincian &rarr;
+          </button>
+        </div>
+      </div>
+
+      <!-- GARASI QUICK CAROUSEL -->
+      <div>
+        <div class="flex items-center justify-between mb-2.5">
+          <h2 class="text-sm font-bold text-slate-200">Garasi Motor Saya</h2>
+          <button onclick="switchTab('garasi')" class="text-xs text-brand-400 font-semibold hover:underline">Kelola Garasi</button>
+        </div>
+        <div id="dashboardMotorCards" class="grid grid-cols-2 gap-3">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- RINGKASAN RECENT LOG -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+          <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Riwayat Servis Terakhir</h3>
+          <button onclick="switchTab('riwayat')" class="text-xs text-brand-400 font-medium">Lihat Semua</button>
+        </div>
+        <div id="dashboardRecentLogs" class="space-y-2.5">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: GARASI & ALERT CENTER -->
+    <section id="tab-garasi" class="tab-content hidden space-y-4">
+      
+      <!-- ALERT CENTER TERPUSAT (AUTO DISAPPEAR ON SERVICE) -->
+      <div id="alertCenterGarasi" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-lg">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <span>🚨</span> Pusat Alert & Status Perbaikan
+          </h2>
+          <span id="alertCountBadge" class="bg-amber-500/20 text-amber-300 text-xs font-bold px-2.5 py-0.5 rounded-full">0 Kritis</span>
+        </div>
+        <p class="text-xs text-slate-400">Daftar sparepart yang butuh perhatian berdasarkan durasi pemakaian bulan.</p>
+        
+        <div id="alertCenterList" class="space-y-2 pt-1">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- KARTU DAFTAR MOTOR FULL -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-200">Daftar Sepeda Motor</h2>
+          <button onclick="openModalAddMotor()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition-all flex items-center gap-1">
+            <span>+</span> Tambah Motor
+          </button>
+        </div>
+        <div id="garasiFullMotorList" class="space-y-3">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: RIWAYAT SERVIS -->
+    <section id="tab-riwayat" class="tab-content hidden space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-bold text-slate-200">Catatan Servis & Perbaikan</h2>
+        <div class="flex gap-1.5">
+          <select id="filterMotorLog" onchange="renderRiwayatList()" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:ring-1 focus:ring-brand-500">
+            <option value="ALL">Semua Motor</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="riwayatLogList" class="space-y-3">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- TAB 4: ANALISIS & GRAFIK BIAYA -->
+    <section id="tab-analisis" class="tab-content hidden space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Pengeluaran Servis Per Motor</h2>
+        <div class="h-48 relative">
+          <canvas id="chartBiayaMotor"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Estimasi Belanja Part (30 Hari)</h2>
+          <span class="text-[10px] text-slate-400">Auto-calculated</span>
+        </div>
+        <div id="analisisForecastList" class="space-y-2">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: PENGATURAN & KELOLA PART -->
+    <section id="tab-pengaturan" class="tab-content hidden space-y-4">
+      
+      <!-- MENU KELOLA SPAREPART & INTERVAL (FITUR BARU) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-1.5">
+              <span>🛠️</span> Kelola Sparepart & Interval
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Atur target interval bulan untuk tiap sparepart.</p>
+          </div>
+          <button onclick="openModalAddPart()" class="bg-brand-600/80 hover:bg-brand-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all">
+            + Part
+          </button>
         </div>
 
-        <div class="flex items-center space-x-2">
-            <!-- Fixed Notification Alert Button -->
-            <button v-if="allActiveAlerts.length > 0" 
-                    @click="goToAlertCenter()"
-                    class="bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 animate-pulse active:scale-95 transition-transform"
-                    title="Klik untuk lihat kumpulan alert perbaikan">
-                <i class="fa-solid fa-bell text-amber-400"></i>
-                <span>{{ allActiveAlerts.length }} Alert</span>
-            </button>
-            <span v-else class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
-                <i class="fa-solid fa-circle-check text-emerald-400"></i> Aman
-            </span>
-            
-            <!-- Quick Add Motor Button -->
-            <button @click="openBikeModal()" class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center text-xs active:scale-95 transition-transform" title="Tambah Motor">
-                <i class="fa-solid fa-plus"></i>
-            </button>
+        <div id="settingsPartsList" class="space-y-2 pt-1">
+          <!-- Rendered via JS -->
         </div>
-    </header>
 
-    <!-- TOP TICKER BANNER (JUMPS TO ALERT CENTER) -->
-    <div v-if="allActiveAlerts.length > 0" 
-         @click="goToAlertCenter()"
-         class="bg-gradient-to-r from-amber-600 to-orange-600 text-slate-950 px-3.5 py-2 text-xs font-semibold flex items-center justify-between gap-2 shadow-inner cursor-pointer">
-        <div class="flex items-center space-x-2 truncate">
-            <i class="fa-solid fa-triangle-exclamation shrink-0"></i>
-            <span class="truncate">{{ allActiveAlerts[0].bikeName }}: {{ allActiveAlerts[0].title }}</span>
-        </div>
-        <button class="text-[10px] bg-slate-950 text-white px-2 py-0.5 rounded-lg shrink-0 font-bold">
-            Lihat Semua <i class="fa-solid fa-chevron-right text-[8px] ml-0.5"></i>
+        <button onclick="resetPartsToDefault()" class="w-full text-center text-xs text-slate-400 hover:text-slate-200 py-1.5 border border-dashed border-slate-800 rounded-xl">
+          🔄 Kembalikan Part ke Rekomendasi Pabrikan
         </button>
-    </div>
+      </div>
 
-    <!-- MAIN MOBILE BODY CONTENT -->
-    <main class="flex-1 px-3.5 py-4 space-y-4">
-
-        <!-- TAB 1: GARASI & DASHBOARD MOBILE -->
-        <section v-if="activeTab === 'garasi'" class="space-y-4">
-            
-            <!-- DEDICATED KUMPULAN ALERT SERVIS & SPAREPART (NEW FEATURE) -->
-            <div id="alertCenterGarasi" class="bg-slate-800/95 rounded-2xl border border-amber-500/40 p-3.5 shadow-xl space-y-3 relative overflow-hidden">
-                <div class="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl"></div>
-                
-                <div class="flex items-center justify-between border-b border-slate-700/80 pb-2.5 relative z-10">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-xs font-bold">
-                            <i class="fa-solid fa-bell"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-xs font-extrabold text-white flex items-center gap-1.5">
-                                Kumpulan Alert Perbaikan & Servis
-                                <span class="bg-amber-500 text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded-full">
-                                    {{ allActiveAlerts.length }}
-                                </span>
-                            </h2>
-                            <p class="text-[10px] text-slate-400">Daftar part aus & servis terlewat. Otomatis hilang jika sudah diperbaiki.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- EMPTY STATE ALERT: ALL BIKES PRIMA -->
-                <div v-if="allActiveAlerts.length === 0" class="bg-slate-900/60 rounded-xl p-4 text-center border border-slate-700/40 space-y-1">
-                    <i class="fa-solid fa-circle-check text-2xl text-emerald-400 block mb-1"></i>
-                    <h4 class="text-xs font-bold text-white">Semua Motor Dalam Kondisi Prima!</h4>
-                    <p class="text-[10px] text-slate-400">Tidak ada sparepart kritis (&le; 30%) atau servis berkala yang terlewat.</p>
-                </div>
-
-                <!-- ACTIVE ALERTS LIST -->
-                <div v-else class="space-y-2 relative z-10 max-h-72 overflow-y-auto pr-0.5">
-                    <div v-for="alertItem in allActiveAlerts" :key="alertItem.id" 
-                         class="bg-slate-900/90 rounded-xl border border-slate-700/80 p-2.5 flex items-center justify-between gap-2 shadow-sm">
-                        <div class="flex items-center space-x-2.5 truncate">
-                            <div :class="alertItem.badgeColor || 'from-brand-600 to-blue-600'" 
-                                 class="w-8 h-8 rounded-lg bg-gradient-to-tr text-white flex items-center justify-center text-xs shrink-0 font-bold">
-                                <i :class="alertItem.icon"></i>
-                            </div>
-                            <div class="truncate">
-                                <div class="flex items-center space-x-1.5">
-                                    <span class="font-bold text-white text-xs truncate">{{ alertItem.bikeName }}</span>
-                                    <span :class="alertItem.type === 'INSIDENTAL' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-rose-500/20 text-rose-400 border-rose-500/30'" 
-                                          class="text-[8px] font-extrabold border px-1.5 py-0.2 rounded shrink-0">
-                                        {{ alertItem.type === 'INSIDENTAL' ? 'Part Aus' : 'Servis Rutin' }}
-                                    </span>
-                                </div>
-                                <p class="text-[10px] font-semibold text-slate-300 truncate mt-0.5">
-                                    {{ alertItem.title }}
-                                </p>
-                                <p class="text-[9px] text-slate-400 truncate font-mono">
-                                    {{ alertItem.detail }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Action Button: Solve Alert -->
-                        <button @click="solveAlert(alertItem)" 
-                                class="bg-brand-600 hover:bg-brand-500 text-white font-extrabold px-2.5 py-1.5 rounded-xl text-[10px] shrink-0 flex items-center gap-1 shadow-md active:scale-95 transition-transform">
-                            <i class="fa-solid fa-wrench"></i> Perbaiki
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 30 Days Forecast Budget Banner -->
-            <div class="bg-gradient-to-br from-slate-800 to-slate-900 border border-brand-500/30 p-4 rounded-2xl shadow-lg relative overflow-hidden">
-                <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-500/10 rounded-full blur-xl"></div>
-                <div class="flex items-start justify-between relative z-10">
-                    <div>
-                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
-                            Forecast 30 Hari Ke Depan
-                        </span>
-                        <h3 class="text-xl font-extrabold text-white mt-1.5 font-mono">
-                            {{ formatRupiah(computedForecastBudget.totalEstimate) }}
-                        </h3>
-                        <p class="text-[11px] text-slate-400 mt-0.5">
-                            Estimasi budget perbaikan {{ computedForecastBudget.items.length }} komponen & servis terdekat.
-                        </p>
-                    </div>
-                    <div class="w-10 h-10 rounded-xl bg-brand-600/20 border border-brand-500/30 flex items-center justify-center text-brand-400 text-lg shrink-0">
-                        <i class="fa-solid fa-calculator"></i>
-                    </div>
-                </div>
-                <div v-if="computedForecastBudget.items.length > 0" class="mt-3 pt-2.5 border-t border-slate-700/60 flex items-center justify-between text-[11px]">
-                    <span class="text-slate-400 truncate">Item: {{ computedForecastBudget.items.map(i => i.item).join(', ') }}</span>
-                    <button @click="activeTab = 'analisis'" class="text-brand-400 font-bold shrink-0 ml-2">Detail <i class="fa-solid fa-arrow-right text-[9px]"></i></button>
-                </div>
-            </div>
-
-            <!-- MOTOR GARAGE LIST -->
-            <div>
-                <div class="flex items-center justify-between mb-2.5">
-                    <h2 class="text-sm font-bold text-white flex items-center gap-1.5">
-                        <i class="fa-solid fa-warehouse text-brand-400"></i> Armada Garasi Anda ({{ bikes.length }})
-                    </h2>
-                    <button @click="openBikeModal()" class="text-xs text-brand-400 font-semibold hover:underline">
-                        + Motor Baru
-                    </button>
-                </div>
-
-                <!-- Bike Cards Container -->
-                <div class="space-y-3">
-                    <div v-for="bike in bikes" :key="bike.id" 
-                         class="bg-slate-800/90 rounded-2xl border border-slate-700/80 shadow-md overflow-hidden relative">
-                        
-                        <!-- Header Motor Card -->
-                        <div class="p-3.5 border-b border-slate-700/60 flex items-center justify-between bg-gradient-to-r from-slate-800 to-slate-800/40">
-                            <div class="flex items-center space-x-3">
-                                <div :class="bike.badgeColor || 'from-brand-600 to-blue-600'" 
-                                     class="w-10 h-10 rounded-xl bg-gradient-to-tr text-white flex items-center justify-center shadow-md text-base font-bold shrink-0">
-                                    <i :class="bike.icon || 'fa-motorcycle'"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-white text-sm leading-tight flex items-center gap-1.5">
-                                        {{ bike.name }}
-                                        <span v-if="bike.year" class="text-[10px] text-slate-400 font-normal">({{ bike.year }})</span>
-                                    </h3>
-                                    <span class="text-[11px] text-brand-400 font-mono font-semibold">{{ bike.platNumber }}</span>
-                                </div>
-                            </div>
-                            <span :class="getStatusBadgeClass(getBikePeriodicStatus(bike))" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1">
-                                {{ getStatusText(getBikePeriodicStatus(bike)) }}
-                            </span>
-                        </div>
-
-                        <!-- Info Body Motor Card -->
-                        <div class="p-3.5 space-y-2.5 text-xs">
-                            <!-- Odometer Row -->
-                            <div class="flex justify-between items-center bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/50">
-                                <span class="text-slate-400 text-[11px]">Odometer Terkini:</span>
-                                <div class="flex items-center space-x-2">
-                                    <span class="font-extrabold font-mono text-white text-sm">{{ formatNumber(bike.currentKm) }} KM</span>
-                                    <button @click="openKmModal(bike)" class="bg-brand-500/20 text-brand-400 border border-brand-500/30 text-[10px] px-2 py-0.5 rounded-lg font-bold active:scale-95 transition-transform">
-                                        <i class="fa-solid fa-pen text-[9px]"></i> Update
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Next Periodic Service Info -->
-                            <div class="grid grid-cols-2 gap-2 text-[11px]">
-                                <div class="bg-slate-900/40 p-2 rounded-lg border border-slate-700/40">
-                                    <span class="text-slate-400 block text-[10px]">Servis Berkala Terakhir:</span>
-                                    <span class="font-medium text-slate-200 truncate block">{{ formatDate(bike.lastPeriodicDate) }}</span>
-                                </div>
-                                <div class="bg-slate-900/40 p-2 rounded-lg border border-slate-700/40">
-                                    <span class="text-slate-400 block text-[10px]">Jadwal Servis Rutin:</span>
-                                    <span class="font-bold truncate block" :class="getDaysRemainingClass(bike)">
-                                        {{ getNextPeriodicText(bike) }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Lowest Health Component Badge -->
-                            <div class="flex items-center justify-between bg-slate-900/40 p-2 rounded-xl border border-slate-700/40 text-[11px]">
-                                <span class="text-slate-400 text-[10px]">Part Paling Kritis:</span>
-                                <div class="flex items-center space-x-1.5">
-                                    <i :class="getLowestHealthPart(bike.id).icon" class="text-slate-400 text-xs"></i>
-                                    <span class="font-medium text-slate-200">{{ getLowestHealthPart(bike.id).name }}</span>
-                                    <span :class="getHealthStatusBadgeClass(getLowestHealthPart(bike.id).healthPercent)" class="px-1.5 py-0.5 rounded text-[10px] font-bold">
-                                        {{ getLowestHealthPart(bike.id).healthPercent }}%
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card Actions -->
-                        <div class="p-2.5 bg-slate-900/80 border-t border-slate-700/60 flex items-center space-x-2">
-                            <button @click="openNewLogModal(bike.id)" 
-                                    class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-bold py-2 px-3 rounded-xl text-xs transition-colors flex items-center justify-center space-x-1.5 active:scale-95">
-                                <i class="fa-solid fa-plus-circle"></i>
-                                <span>Catat Servis</span>
-                            </button>
-                            <button @click="selectHealthBikeAndSwitch(bike.id)" 
-                                    class="bg-slate-800 hover:bg-slate-700 text-brand-400 border border-slate-700 font-bold py-2 px-3 rounded-xl text-xs transition-colors flex items-center justify-center active:scale-95" title="Kesehatan Part">
-                                <i class="fa-solid fa-heart-pulse"></i>
-                            </button>
-                            <button @click="exportCalendarICS(bike)" 
-                                    class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-bold py-2 px-3 rounded-xl text-xs transition-colors flex items-center justify-center active:scale-95" title="Pengingat Kalender HP (.ics)">
-                                <i class="fa-solid fa-calendar-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RECENT SERVICE LOG TIMELINE -->
-            <div class="bg-slate-800/90 rounded-2xl border border-slate-700/80 p-3.5 shadow-md space-y-3">
-                <div class="flex items-center justify-between border-b border-slate-700/60 pb-2.5">
-                    <h3 class="font-bold text-white text-xs flex items-center gap-1.5">
-                        <i class="fa-solid fa-clock-rotate-left text-brand-400"></i> Catatan Pemeliharaan Terbaru
-                    </h3>
-                    <button @click="activeTab = 'riwayat'" class="text-[11px] text-brand-400 font-bold">
-                        Semua <i class="fa-solid fa-chevron-right text-[8px]"></i>
-                    </button>
-                </div>
-
-                <div v-if="serviceLogs.length === 0" class="text-center py-6 text-slate-500 text-xs">
-                    <i class="fa-solid fa-wrench text-2xl mb-1 text-slate-600 block"></i>
-                    Belum ada catatan servis. Tekan tombol "+" untuk mencatat.
-                </div>
-
-                <div v-else class="space-y-2.5">
-                    <div v-for="log in recentLogs" :key="log.id" 
-                         @click="viewLogDetail(log)"
-                         class="p-3 rounded-xl border border-slate-700/60 bg-slate-900/50 hover:bg-slate-900 transition-colors flex items-center justify-between gap-2 cursor-pointer active:scale-[0.99]">
-                        <div class="flex items-center space-x-2.5 truncate">
-                            <div class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-brand-400 flex items-center justify-center font-bold text-xs shrink-0">
-                                <i class="fa-solid fa-motorcycle"></i>
-                            </div>
-                            <div class="truncate">
-                                <div class="flex items-center space-x-1.5 truncate">
-                                    <h4 class="font-bold text-white text-xs truncate">{{ getBikeName(log.bikeId) }}</h4>
-                                    <span :class="log.type === 'INSIDENTAL' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-brand-500/20 text-brand-400 border-brand-500/30'" 
-                                          class="text-[9px] font-extrabold border px-1.5 py-0.2 rounded shrink-0">
-                                        {{ log.type === 'INSIDENTAL' ? '⚡ Part' : '🔄 Rutin' }}
-                                    </span>
-                                </div>
-                                <p class="text-[10px] text-slate-400 truncate mt-0.5">
-                                    {{ formatDate(log.date) }} • {{ getLogPartNames(log).slice(0, 2).join(', ') }}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="text-right shrink-0">
-                            <span class="font-extrabold text-white text-xs font-mono block">{{ formatRupiah(log.totalCost) }}</span>
-                            <span class="text-[9px] text-slate-400 font-mono">{{ formatNumber(log.odometer) }} KM</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- TAB 2: KESEHATAN COMPONENT LIFESPAN (INDEPENDENT TRACKING) -->
-        <section v-if="activeTab === 'health'" class="space-y-4">
-            
-            <!-- Motor Selector Header -->
-            <div class="bg-slate-800/90 p-3.5 rounded-2xl border border-slate-700/80 space-y-3">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-sm font-bold text-white flex items-center gap-1.5">
-                            <i class="fa-solid fa-heart-pulse text-rose-500"></i> Kesehatan Part Mandiri
-                        </h2>
-                        <p class="text-[10px] text-slate-400">Part dihitung umurnya secara terpisah per komponen.</p>
-                    </div>
-
-                    <!-- Motor Selector Dropdown -->
-                    <select v-model="selectedHealthBikeId" class="bg-slate-900 text-white text-xs border border-slate-700 rounded-xl px-2.5 py-1.5 font-bold focus:ring-2 focus:ring-brand-500 outline-none">
-                        <option v-for="bike in bikes" :key="bike.id" :value="bike.id">{{ bike.name }}</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Component Health Cards Grid -->
-            <div class="space-y-3">
-                <div v-for="part in activeBikePartHealth" :key="part.id" 
-                     class="bg-slate-800/90 p-3.5 rounded-2xl border border-slate-700/80 space-y-2.5 shadow-sm">
-                    
-                    <!-- Part Title Bar -->
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-brand-400 text-sm font-bold shrink-0">
-                                <i :class="part.icon"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-white text-xs leading-tight">{{ part.name }}</h4>
-                                <span class="text-[9px] text-slate-400 bg-slate-900/80 px-1.5 py-0.2 rounded font-semibold">{{ part.category }}</span>
-                            </div>
-                        </div>
-                        <span :class="getHealthStatusBadgeClass(part.healthPercent)" class="px-2 py-0.5 rounded-full text-xs font-extrabold shrink-0">
-                            {{ part.healthPercent }}%
-                        </span>
-                    </div>
-
-                    <!-- Progress Bar -->
-                    <div class="space-y-1">
-                        <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-700/50">
-                            <div class="h-2.5 rounded-full transition-all duration-500" 
-                                 :class="getHealthColorClass(part.healthPercent)"
-                                 :style="{ width: part.healthPercent + '%' }"></div>
-                        </div>
-                        <div class="flex justify-between text-[10px] text-slate-400 font-mono">
-                            <span>Terpakai: <strong class="text-slate-200">{{ formatNumber(part.kmUsed) }} KM</strong></span>
-                            <span>Sisa: <strong class="text-slate-200">{{ formatNumber(part.kmRemaining) }} KM</strong></span>
-                        </div>
-                    </div>
-
-                    <!-- Part Sub-Info & Action -->
-                    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/40 flex items-center justify-between text-[11px]">
-                        <div>
-                            <span class="text-slate-400 text-[10px] block">Terakhir Diganti:</span>
-                            <span class="font-semibold text-slate-200">{{ formatDate(part.lastDate) }} ({{ formatNumber(part.lastKm) }} KM)</span>
-                        </div>
-                        <div class="flex items-center space-x-1.5">
-                            <button @click="openEditIntervalModal(part)" class="p-1.5 text-slate-400 hover:text-white bg-slate-800 rounded-lg text-xs" title="Edit Interval">
-                                <i class="fa-solid fa-sliders"></i>
-                            </button>
-                            <button @click="quickReplacePart(part)" class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-2.5 py-1.5 rounded-lg text-[10px] flex items-center gap-1 active:scale-95">
-                                <i class="fa-solid fa-wrench"></i> Ganti Part Ini
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB 3: RIWAYAT SERVIS MOBILE TIMELINE -->
-        <section v-if="activeTab === 'riwayat'" class="space-y-3">
-            
-            <!-- Filters Bar Mobile -->
-            <div class="bg-slate-800/90 p-3 rounded-2xl border border-slate-700/80 space-y-2">
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                    <input type="text" v-model="searchQuery" placeholder="Cari part, bengkel, atau catatan..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700 text-white rounded-xl focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <select v-model="filterLogType" class="bg-slate-900 border border-slate-700 text-slate-200 rounded-xl px-2 py-1.5 font-medium outline-none">
-                        <option value="ALL">Semua Tipe Catatan</option>
-                        <option value="RUTIN">Servis Berkala</option>
-                        <option value="INSIDENTAL">Perbaikan Insidental</option>
-                    </select>
-
-                    <select v-model="filterBikeId" class="bg-slate-900 border border-slate-700 text-slate-200 rounded-xl px-2 py-1.5 font-medium outline-none">
-                        <option value="ALL">Semua Motor</option>
-                        <option v-for="bike in bikes" :key="bike.id" :value="bike.id">{{ bike.name }}</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Service Log Cards List -->
-            <div class="space-y-2.5">
-                <div v-if="filteredLogs.length === 0" class="text-center py-10 text-slate-500 text-xs">
-                    <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-600 block"></i>
-                    Tidak ada catatan riwayat yang cocok.
-                </div>
-
-                <div v-for="log in filteredLogs" :key="log.id" 
-                     class="bg-slate-800/90 rounded-2xl border border-slate-700/80 p-3.5 space-y-3 shadow-sm">
-                    
-                    <!-- Card Top Header -->
-                    <div class="flex items-start justify-between border-b border-slate-700/60 pb-2.5">
-                        <div>
-                            <div class="flex items-center space-x-2">
-                                <h4 class="font-extrabold text-white text-xs">{{ getBikeName(log.bikeId) }}</h4>
-                                <span :class="log.type === 'INSIDENTAL' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-brand-500/20 text-brand-400 border-brand-500/30'" 
-                                      class="text-[9px] font-bold border px-1.5 py-0.2 rounded">
-                                    {{ log.type === 'INSIDENTAL' ? '⚡ Perbaikan Insidental' : '🔄 Servis Berkala' }}
-                                </span>
-                            </div>
-                            <p class="text-[10px] text-slate-400 mt-0.5">
-                                <i class="fa-regular fa-calendar mr-1"></i>{{ formatDate(log.date) }} 
-                                <span class="mx-1">•</span>
-                                <i class="fa-solid fa-store mr-1"></i>{{ log.workshop || 'Bengkel Umum' }}
-                            </p>
-                        </div>
-                        <span class="font-mono text-xs font-extrabold text-white bg-slate-900 px-2 py-1 rounded-lg border border-slate-700">
-                            {{ formatNumber(log.odometer) }} KM
-                        </span>
-                    </div>
-
-                    <!-- Replaced Parts List -->
-                    <div class="space-y-1">
-                        <span class="text-[10px] text-slate-400 font-semibold block">Komponen Diganti:</span>
-                        <div class="flex flex-wrap gap-1">
-                            <span v-for="partName in getLogPartNames(log)" :key="partName" class="text-[10px] bg-slate-900 text-brand-400 border border-slate-700 px-2 py-0.5 rounded-lg font-medium">
-                                {{ partName }}
-                            </span>
-                        </div>
-                        <p v-if="log.notes" class="text-[11px] text-slate-300 italic mt-1 bg-slate-900/40 p-2 rounded-lg border border-slate-700/30">
-                            "{{ log.notes }}"
-                        </p>
-                    </div>
-
-                    <!-- Merek Sparepart & Garansi Tag -->
-                    <div v-if="log.partBrand || log.warrantyNotes" class="flex flex-wrap gap-2 text-[10px] text-slate-400 pt-1">
-                        <span v-if="log.partBrand" class="bg-slate-900/80 px-2 py-0.5 rounded border border-slate-700">
-                            <i class="fa-solid fa-tag text-brand-400 mr-1"></i>Merek: {{ log.partBrand }}
-                        </span>
-                        <span v-if="log.warrantyNotes" class="bg-slate-900/80 px-2 py-0.5 rounded border border-slate-700 text-emerald-400">
-                            <i class="fa-solid fa-shield-halved mr-1"></i>Garansi: {{ log.warrantyNotes }}
-                        </span>
-                    </div>
-
-                    <!-- Card Bottom Bar -->
-                    <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
-                        <div>
-                            <span class="text-[9px] text-slate-400 block">Total Biaya:</span>
-                            <span class="font-extrabold text-white text-sm font-mono">{{ formatRupiah(log.totalCost) }}</span>
-                        </div>
-                        <div class="flex items-center space-x-1.5">
-                            <button @click="viewLogDetail(log)" class="px-2.5 py-1.5 bg-slate-900 text-brand-400 hover:bg-slate-700 rounded-xl text-xs font-bold border border-slate-700">
-                                <i class="fa-solid fa-receipt mr-1"></i>Nota
-                            </button>
-                            <button @click="editLogModal(log)" class="p-1.5 bg-slate-900 text-amber-400 hover:bg-slate-700 rounded-xl text-xs border border-slate-700">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button @click="triggerDeleteLogConfirm(log.id)" class="p-1.5 bg-slate-900 text-rose-400 hover:bg-slate-700 rounded-xl text-xs border border-slate-700">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- TAB 4: ANALISIS BIAYA & CHARTS MOBILE -->
-        <section v-if="activeTab === 'analisis'" class="space-y-4">
-            
-            <!-- Forecast Breakdown Card -->
-            <div class="bg-slate-800/90 p-3.5 rounded-2xl border border-slate-700/80 space-y-2.5">
-                <h3 class="font-bold text-white text-xs flex items-center gap-1.5">
-                    <i class="fa-solid fa-calculator text-brand-400"></i> Rincian Forecast Budget Bulan Depan
-                </h3>
-                <div v-if="computedForecastBudget.items.length === 0" class="text-xs text-slate-400 py-2">
-                    <i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Semua part & jadwal servis rutin saat ini dalam kondisi prima.
-                </div>
-                <div v-else class="space-y-1.5 text-xs">
-                    <div v-for="(item, idx) in computedForecastBudget.items" :key="idx" class="flex justify-between items-center bg-slate-900/60 p-2 rounded-lg border border-slate-700/40">
-                        <span class="text-slate-300 font-medium">{{ item.bikeName }}: {{ item.item }}</span>
-                        <span class="font-mono font-bold text-amber-400">~{{ formatRupiah(item.cost) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center pt-2 font-bold border-t border-slate-700/60">
-                        <span class="text-white">Total Perkiraan Budget:</span>
-                        <span class="text-brand-400 font-mono text-sm">{{ formatRupiah(computedForecastBudget.totalEstimate) }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chart 1: Doughnut Expense per Bike -->
-            <div class="bg-slate-800/90 p-4 rounded-2xl border border-slate-700/80 space-y-3">
-                <h3 class="font-bold text-white text-xs flex items-center gap-1.5">
-                    <i class="fa-solid fa-chart-pie text-brand-400"></i> Proporsi Pengeluaran per Motor
-                </h3>
-                <div class="h-56 relative flex items-center justify-center">
-                    <canvas id="bikeCostChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Chart 2: Monthly Bar Chart -->
-            <div class="bg-slate-800/90 p-4 rounded-2xl border border-slate-700/80 space-y-3">
-                <h3 class="font-bold text-white text-xs flex items-center gap-1.5">
-                    <i class="fa-solid fa-chart-column text-brand-400"></i> Tren Biaya Perbaikan Bulanan
-                </h3>
-                <div class="h-56 relative">
-                    <canvas id="monthlyCostChart"></canvas>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- TAB 5: PENGATURAN & MANAGEMENT GARASI MOBILE -->
-        <section v-if="activeTab === 'pengaturan'" class="space-y-4">
-            
-            <!-- Dynamic Garage Management -->
-            <div class="bg-slate-800/90 p-4 rounded-2xl border border-slate-700/80 space-y-3">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-white text-xs flex items-center gap-1.5">
-                            <i class="fa-solid fa-warehouse text-brand-400"></i> Kelola Garasi Motor
-                        </h3>
-                        <p class="text-[10px] text-slate-400">Tambah, edit, atau hapus motor dari garasi Anda.</p>
-                    </div>
-                    <button @click="openBikeModal()" class="bg-brand-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs active:scale-95">
-                        + Tambah
-                    </button>
-                </div>
-
-                <div class="space-y-2 pt-1">
-                    <div v-for="bike in bikes" :key="bike.id" class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-700/60">
-                        <div class="flex items-center space-x-2.5">
-                            <div :class="bike.badgeColor || 'from-brand-600 to-blue-600'" class="w-7 h-7 rounded-lg bg-gradient-to-tr text-white flex items-center justify-center text-xs font-bold">
-                                <i :class="bike.icon || 'fa-motorcycle'"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-white text-xs leading-tight">{{ bike.name }}</h4>
-                                <span class="text-[10px] text-slate-400 font-mono">{{ bike.platNumber }}</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-1.5">
-                            <button @click="openBikeModal(bike)" class="p-1.5 bg-slate-800 text-amber-400 rounded-lg text-xs border border-slate-700">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button @click="triggerDeleteBikeConfirm(bike.id)" class="p-1.5 bg-slate-800 text-rose-400 rounded-lg text-xs border border-slate-700">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Backup & Export Data Buttons -->
-            <div class="bg-slate-800/90 p-4 rounded-2xl border border-slate-700/80 space-y-3">
-                <h3 class="font-bold text-white text-xs flex items-center gap-1.5">
-                    <i class="fa-solid fa-database text-brand-400"></i> Backup & Restore Data
-                </h3>
-                
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <button @click="exportJSON()" class="bg-slate-900 hover:bg-slate-700 text-brand-400 border border-slate-700 p-2.5 rounded-xl font-bold flex flex-col items-center justify-center text-center space-y-1 active:scale-95">
-                        <i class="fa-solid fa-file-code text-base text-brand-400"></i>
-                        <span>Export Backup JSON</span>
-                    </button>
-                    <button @click="exportCSV()" class="bg-slate-900 hover:bg-slate-700 text-emerald-400 border border-slate-700 p-2.5 rounded-xl font-bold flex flex-col items-center justify-center text-center space-y-1 active:scale-95">
-                        <i class="fa-solid fa-file-excel text-base text-emerald-400"></i>
-                        <span>Export Excel CSV</span>
-                    </button>
-                </div>
-
-                <input type="file" ref="importFileInput" @change="importJSON" class="hidden" accept=".json">
-                <button @click="$refs.importFileInput.click()" class="w-full bg-slate-900 hover:bg-slate-700 text-indigo-400 border border-slate-700 p-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 active:scale-95">
-                    <i class="fa-solid fa-upload"></i>
-                    <span>Restore File Backup JSON</span>
-                </button>
-            </div>
-
-            <!-- Reset & Danger Zone -->
-            <div class="bg-slate-800/90 p-4 rounded-2xl border border-rose-500/30 space-y-3">
-                <h3 class="font-bold text-rose-400 text-xs flex items-center gap-1.5">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Zona Bahaya & Factory Reset
-                </h3>
-                <div class="space-y-2">
-                    <button @click="resetToSampleData()" class="w-full bg-slate-900 hover:bg-slate-700 text-amber-400 border border-slate-700 p-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 active:scale-95">
-                        <i class="fa-solid fa-rotate-left"></i>
-                        <span>Reset Ke Data Sampel Awal</span>
-                    </button>
-                    <button @click="openFactoryResetModal()" class="w-full bg-rose-600 hover:bg-rose-700 text-white p-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-lg shadow-rose-600/30 active:scale-95">
-                        <i class="fa-solid fa-trash-arrow-up"></i>
-                        <span>Reset Total Data (Mulai Dari Nol)</span>
-                    </button>
-                </div>
-            </div>
-
-        </section>
-
-    </main>
-
-    <!-- FIXED MOBILE BOTTOM NAVIGATION BAR -->
-    <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 max-w-md mx-auto">
-        <div class="flex items-center justify-around h-16 px-2 relative">
-            
-            <!-- Nav 1: Dashboard -->
-            <button @click="activeTab = 'garasi'" 
-                    :class="activeTab === 'garasi' ? 'text-brand-400 font-bold' : 'text-slate-400 hover:text-slate-200'"
-                    class="flex-1 flex flex-col items-center justify-center text-[10px] space-y-1 transition-colors">
-                <i class="fa-solid fa-house text-base"></i>
-                <span>Garasi</span>
-            </button>
-
-            <!-- Nav 2: Kesehatan -->
-            <button @click="activeTab = 'health'" 
-                    :class="activeTab === 'health' ? 'text-brand-400 font-bold' : 'text-slate-400 hover:text-slate-200'"
-                    class="flex-1 flex flex-col items-center justify-center text-[10px] space-y-1 transition-colors">
-                <i class="fa-solid fa-heart-pulse text-base"></i>
-                <span>Part Mandiri</span>
-            </button>
-
-            <!-- CENTER PROMINENT FAB (+ CATAT) -->
-            <div class="flex-1 flex justify-center -mt-6">
-                <button @click="openNewLogModal()" 
-                        class="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-600 to-cyan-400 text-white flex items-center justify-center text-xl shadow-xl shadow-brand-500/40 border-2 border-slate-900 active:scale-90 transition-transform">
-                    <i class="fa-solid fa-plus"></i>
-                </button>
-            </div>
-
-            <!-- Nav 3: Riwayat -->
-            <button @click="activeTab = 'riwayat'" 
-                    :class="activeTab === 'riwayat' ? 'text-brand-400 font-bold' : 'text-slate-400 hover:text-slate-200'"
-                    class="flex-1 flex flex-col items-center justify-center text-[10px] space-y-1 transition-colors">
-                <i class="fa-solid fa-clock-rotate-left text-base"></i>
-                <span>Riwayat</span>
-            </button>
-
-            <!-- Nav 4: Pengaturan & Analisis -->
-            <button @click="activeTab = 'pengaturan'" 
-                    :class="activeTab === 'pengaturan' ? 'text-brand-400 font-bold' : 'text-slate-400 hover:text-slate-200'"
-                    class="flex-1 flex flex-col items-center justify-center text-[10px] space-y-1 transition-colors">
-                <i class="fa-solid fa-sliders text-base"></i>
-                <span>Pengaturan</span>
-            </button>
-
+      <!-- BACKUP & DATA MANAGEMENTS -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Backup & Export Data</h2>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="exportJSON()" class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold py-2.5 px-3 rounded-xl border border-slate-700 flex items-center justify-center gap-1.5">
+            <span>📥</span> Export JSON
+          </button>
+          <label class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold py-2.5 px-3 rounded-xl border border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer text-center">
+            <span>📤</span> Import JSON
+            <input type="file" id="importFile" accept=".json" onchange="importJSON(event)" class="hidden">
+          </label>
         </div>
-    </nav>
+      </div>
 
-    <!-- ANDROID BOTTOM-SHEET MODAL 1: ADD/EDIT SERVICE LOG -->
-    <div v-if="showLogModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end">
-        <div class="bg-slate-900 rounded-t-3xl border-t border-slate-700 max-h-[92vh] overflow-y-auto animate-bottom-sheet flex flex-col max-w-md mx-auto w-full">
-            
-            <!-- Drag handle header -->
-            <div class="p-3 border-b border-slate-800 sticky top-0 bg-slate-900 z-10 flex flex-col items-center">
-                <div class="w-12 h-1 bg-slate-700 rounded-full mb-2"></div>
-                <div class="w-full flex items-center justify-between px-2">
-                    <h3 class="font-bold text-white text-sm">{{ isEditingLog ? 'Edit Catatan Servis' : 'Catat Servis / Perbaikan Part' }}</h3>
-                    <button @click="closeLogModal()" class="text-slate-400 hover:text-white text-lg p-1">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-            </div>
+      <!-- RESET TOTAL DATA (FACTORY RESET) -->
+      <div class="bg-rose-950/30 border border-rose-900/50 rounded-2xl p-4 space-y-2.5">
+        <h2 class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+          <span>⚠️</span> Factory Reset (Mulai dari Nol)
+        </h2>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Hapus seluruh isi garasi, riwayat servis, dan pengaturan untuk menginput ulang dari awal secara bersih.
+        </p>
+        <button onclick="openModalResetConfirm()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-2.5 rounded-xl shadow transition-all">
+          🔥 Reset Total Semua Data
+        </button>
+      </div>
+    </section>
 
-            <!-- Form Body -->
-            <form @submit.prevent="saveLogForm" class="p-4 space-y-4">
-                
-                <!-- TIPE CATATAN TOGGLE (RUTIN VS INSIDENTAL) -->
-                <div class="bg-slate-950 p-1 rounded-xl flex items-center border border-slate-800 text-xs">
-                    <button type="button" 
-                            @click="formLog.type = 'INSIDENTAL'"
-                            :class="formLog.type === 'INSIDENTAL' ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold' : 'text-slate-400 hover:text-white font-medium'"
-                            class="flex-1 py-2 px-2 rounded-lg flex items-center justify-center space-x-1 transition-all">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span>⚡ Insidental (Part Saja)</span>
-                    </button>
-                    <button type="button" 
-                            @click="formLog.type = 'RUTIN'"
-                            :class="formLog.type === 'RUTIN' ? 'bg-brand-500 text-white shadow-md font-extrabold' : 'text-slate-400 hover:text-white font-medium'"
-                            class="flex-1 py-2 px-2 rounded-lg flex items-center justify-center space-x-1 transition-all">
-                        <i class="fa-solid fa-rotate"></i>
-                        <span>🔄 Servis Rutin</span>
-                    </button>
-                </div>
+  </main>
 
-                <!-- Explanation Banner -->
-                <div :class="formLog.type === 'INSIDENTAL' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-brand-500/10 border-brand-500/30 text-brand-300'" class="p-2.5 rounded-xl border text-[11px]">
-                    <span v-if="formLog.type === 'INSIDENTAL'">
-                        <strong>Mode Insidental:</strong> Hanya memperbarui tanggal & KM part yang dicentang di bawah (misal: V-Belt putus). Part lain TIDAK terganggu.
-                    </span>
-                    <span v-else>
-                        <strong>Mode Servis Rutin:</strong> Memperbarui part terpilih SEKALIGUS mereset jadwal servis rutin motor berikutnya.
-                    </span>
-                </div>
+  <!-- FLOATING ACTION BUTTON (FAB) FOR QUICK CATAT SERVIS -->
+  <div class="fixed bottom-20 right-4 z-40 max-w-md mx-auto">
+    <button onclick="openModalCatatServis()" class="bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold text-xs px-4 py-3 rounded-full shadow-2xl shadow-brand-500/50 flex items-center gap-2 hover:scale-105 active:scale-95 transition-all">
+      <span class="text-base font-black">+</span> Catat Servis
+    </button>
+  </div>
 
-                <!-- Motor & Tanggal -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Sepeda Motor *</label>
-                        <select v-model="formLog.bikeId" required @change="onBikeChangeInForm" class="w-full text-xs bg-slate-950 border border-slate-700 text-white rounded-xl px-2.5 py-2 font-bold outline-none">
-                            <option v-for="bike in bikes" :key="bike.id" :value="bike.id">{{ bike.name }}</option>
-                        </select>
-                    </div>
+  <!-- BOTTOM NAVIGATION BAR (MOBILE NATIVE STYLE) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-30 bottom-nav">
+    <div class="max-w-md mx-auto grid grid-cols-5 px-2 py-2">
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center justify-center py-1 text-brand-400">
+        <span class="text-lg">📊</span>
+        <span class="text-[10px] font-semibold mt-0.5">Home</span>
+      </button>
+      <button onclick="switchTab('garasi')" id="nav-garasi" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200">
+        <span class="text-lg">🛵</span>
+        <span class="text-[10px] font-semibold mt-0.5">Garasi</span>
+      </button>
+      <button onclick="switchTab('riwayat')" id="nav-riwayat" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200">
+        <span class="text-lg">📜</span>
+        <span class="text-[10px] font-semibold mt-0.5">Riwayat</span>
+      </button>
+      <button onclick="switchTab('analisis')" id="nav-analisis" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200">
+        <span class="text-lg">📈</span>
+        <span class="text-[10px] font-semibold mt-0.5">Biaya</span>
+      </button>
+      <button onclick="switchTab('pengaturan')" id="nav-pengaturan" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200">
+        <span class="text-lg">⚙️</span>
+        <span class="text-[10px] font-semibold mt-0.5">Setting</span>
+      </button>
+    </div>
+  </nav>
 
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Tanggal *</label>
-                        <input type="date" v-model="formLog.date" required class="w-full text-xs bg-slate-950 border border-slate-700 text-white rounded-xl px-2.5 py-2 outline-none">
-                    </div>
-                </div>
+  <!-- MODAL: CATAT SERVIS / PERBAIKAN (BOTTOM SHEET) -->
+  <div id="modalCatatServis" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 w-full max-w-md rounded-t-3xl max-h-[90vh] overflow-y-auto p-5 space-y-4 bottom-sheet">
+      <div class="w-12 h-1 bg-slate-700 rounded-full mx-auto mb-1"></div>
+      
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">Catat Servis / Perbaikan</h3>
+        <button onclick="closeModalCatatServis()" class="text-slate-400 hover:text-white font-bold p-1">✕</button>
+      </div>
 
-                <!-- Odometer & Bengkel -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Odometer (KM) *</label>
-                        <input type="number" inputmode="numeric" pattern="[0-9]*" v-model.number="formLog.odometer" required placeholder="Contoh: 18500" class="w-full text-xs bg-slate-950 border border-slate-700 text-white rounded-xl px-2.5 py-2 font-mono font-bold outline-none">
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Bengkel / Mekanik</label>
-                        <input type="text" v-model="formLog.workshop" placeholder="Misal: AHASS / Mandiri" class="w-full text-xs bg-slate-950 border border-slate-700 text-white rounded-xl px-2.5 py-2 outline-none">
-                    </div>
-                </div>
-
-                <!-- Tracked Parts Checklist -->
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Pilih Part Diganti *</label>
-                    <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800 max-h-40 overflow-y-auto">
-                        <label v-for="trackedPart in trackedPartsMaster" :key="trackedPart.id" 
-                               :class="formLog.replacedPartIds.includes(trackedPart.id) ? 'bg-brand-600/20 border-brand-500 text-brand-300' : 'border-slate-800 text-slate-400'"
-                               class="flex items-center space-x-2 p-1.5 rounded-lg border text-xs cursor-pointer truncate">
-                            <input type="checkbox" :value="trackedPart.id" v-model="formLog.replacedPartIds" class="rounded text-brand-600 w-3.5 h-3.5">
-                            <span class="truncate font-medium text-[11px]">{{ trackedPart.name }}</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Brand & Warranty Fields -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Merek Part (Opsional)</label>
-                        <input type="text" v-model="formLog.partBrand" placeholder="Misal: Yamalube / Gates" class="w-full text-xs bg-slate-950 border border-slate-700 text-white rounded-xl px-2.5 py-2 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Garansi (Opsional)</label>
-                        <input type="text" v-model="formLog.warrantyNotes" placeholder="Misal: 1 Bulan / 1000 KM" class="w-full text-xs bg-slate-950 border border-slate-700 text-white rounded-xl px-2.5 py-2 outline-none">
-                    </div>
-                </div>
-
-                <!-- Costs Section -->
-                <div class="grid grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Biaya Part (Rp)</label>
-                        <input type="number" inputmode="numeric" pattern="[0-9]*" v-model.number="formLog.partCost" min="0" placeholder="0" class="w-full text-xs bg-slate-900 border border-slate-700 text-white rounded-xl px-2.5 py-2 font-mono font-semibold outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Biaya Jasa (Rp)</label>
-                        <input type="number" inputmode="numeric" pattern="[0-9]*" v-model.number="formLog.laborCost" min="0" placeholder="0" class="w-full text-xs bg-slate-900 border border-slate-700 text-white rounded-xl px-2.5 py-2 font-mono font-semibold outline-none">
-                    </div>
-                </div>
-
-                <!-- Next Schedule Inputs (ONLY IF TYPE IS RUTIN) -->
-                <div v-if="formLog.type === 'RUTIN'" class="grid grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Tanggal Servis Rutin Berikutnya</label>
-                        <input type="date" v-model="formLog.nextPeriodicDate" required class="w-full text-xs bg-slate-900 border border-slate-700 text-white rounded-xl px-2.5 py-2 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Target KM Berikutnya</label>
-                        <input type="number" inputmode="numeric" pattern="[0-9]*" v-model.number="formLog.nextPeriodicKm" min="0" class="w-full text-xs bg-slate-900 border border-slate-700 text-white rounded-xl px-2.5 py-2 font-mono font-bold outline-none">
-                    </div>
-                </div>
-
-                <!-- Notes -->
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Catatan Tambahan</label>
-                    <textarea v-model="formLog.notes" rows="2" placeholder="Catatan keluhan atau instruksi khusus..." class="w-full text-xs bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 outline-none"></textarea>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="pt-2">
-                    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all shadow-lg shadow-brand-600/30 active:scale-95">
-                        {{ isEditingLog ? 'Simpan Perubahan' : 'Simpan Catatan Servis' }}
-                    </button>
-                </div>
-            </form>
+      <form id="formCatatServis" onsubmit="handleSaveServis(event)" class="space-y-3.5">
+        
+        <!-- PILIH MOTOR -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Pilih Sepeda Motor</label>
+          <select id="inputServisMotorId" onchange="renderPartCheckboxesInForm()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-xs focus:ring-1 focus:ring-brand-500" required>
+            <!-- Rendered via JS -->
+          </select>
         </div>
-    </div>
 
-    <!-- ANDROID BOTTOM-SHEET MODAL 2: ADD/EDIT MOTOR -->
-    <div v-if="showBikeModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end">
-        <div class="bg-slate-900 rounded-t-3xl border-t border-slate-700 max-h-[90vh] overflow-y-auto animate-bottom-sheet p-4 space-y-4 max-w-md mx-auto w-full">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-bold text-white text-sm">{{ isEditingBike ? 'Edit Data Motor' : 'Tambah Motor Baru' }}</h3>
-                <button @click="showBikeModal = false" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <form @submit.prevent="saveBikeForm" class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-bold text-slate-300 mb-1">Nama / Model Motor *</label>
-                    <input type="text" v-model="formBike.name" required placeholder="Contoh: Yamaha NMAX 155" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 outline-none">
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-bold text-slate-300 mb-1">Plat Nomor *</label>
-                        <input type="text" v-model="formBike.platNumber" required placeholder="Contoh: B 4589 NMX" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 font-mono outline-none">
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-300 mb-1">Tahun Kendaraan</label>
-                        <input type="text" v-model="formBike.year" placeholder="2023" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 outline-none">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block font-bold text-slate-300 mb-1">Odometer KM Saat Ini *</label>
-                    <input type="number" inputmode="numeric" pattern="[0-9]*" v-model.number="formBike.currentKm" required min="0" placeholder="18500" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 font-mono font-bold outline-none">
-                </div>
-
-                <div>
-                    <label class="block font-bold text-slate-300 mb-1">Warna Kartu Badge</label>
-                    <div class="grid grid-cols-4 gap-2 pt-1">
-                        <button type="button" v-for="color in colorOptions" :key="color.class"
-                                @click="formBike.badgeColor = color.class"
-                                :class="[color.class, formBike.badgeColor === color.class ? 'ring-2 ring-white scale-105' : 'opacity-70']"
-                                class="h-8 rounded-lg font-bold text-[10px] text-white flex items-center justify-center transition-all">
-                            {{ color.name }}
-                        </button>
-                    </div>
-                </div>
-
-                <div class="pt-3">
-                    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-extrabold py-3 rounded-xl text-xs active:scale-95">
-                        {{ isEditingBike ? 'Simpan Motor' : 'Tambah Motor Ke Garasi' }}
-                    </button>
-                </div>
-            </form>
+        <!-- TIPE CATATAN -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Tipe Transaksi</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="bg-slate-800 border border-slate-700 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer has-[:checked]:border-brand-500 has-[:checked]:bg-brand-500/10">
+              <input type="radio" name="tipeServis" value="rutin" checked class="text-brand-500">
+              <div>
+                <div class="text-xs font-bold text-slate-200">🔄 Servis Rutin</div>
+                <div class="text-[10px] text-slate-400">Reset estimasi jadwal berikutnya</div>
+              </div>
+            </label>
+            <label class="bg-slate-800 border border-slate-700 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer has-[:checked]:border-amber-500 has-[:checked]:bg-amber-500/10">
+              <input type="radio" name="tipeServis" value="insidental" class="text-amber-500">
+              <div>
+                <div class="text-xs font-bold text-slate-200">⚡ Insidental</div>
+                <div class="text-[10px] text-slate-400">Hanya part terkait yang diganti</div>
+              </div>
+            </label>
+          </div>
         </div>
-    </div>
 
-    <!-- QUICK ODOMETER MODAL -->
-    <div v-if="showKmModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end">
-        <div class="bg-slate-900 rounded-t-3xl border-t border-slate-700 p-4 space-y-3 animate-bottom-sheet max-w-md mx-auto w-full">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-bold text-white text-sm">Update Odometer</h3>
-                <button @click="showKmModal = false" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <p class="text-xs text-slate-400">Masukkan angka kilometer terkini untuk <strong class="text-white">{{ activeKmBike?.name }}</strong>:</p>
-            <div>
-                <input type="number" inputmode="numeric" pattern="[0-9]*" v-model.number="tempKmValue" min="0" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-3 font-mono text-base font-extrabold outline-none">
-            </div>
-            <div class="flex justify-end space-x-2 pt-2">
-                <button @click="showKmModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-400">Batal</button>
-                <button @click="saveKmUpdate()" class="px-5 py-2 rounded-xl text-xs font-extrabold bg-brand-600 text-white">Simpan KM</button>
-            </div>
+        <!-- TANGGAL & BENGKEL -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Tanggal</label>
+            <input type="date" id="inputServisTanggal" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Nama Bengkel</label>
+            <input type="text" id="inputServisBengkel" placeholder="Misal: AHASS / Yamaha" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs">
+          </div>
         </div>
-    </div>
 
-    <!-- EDIT PART INTERVAL MODAL -->
-    <div v-if="showIntervalModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end">
-        <div class="bg-slate-900 rounded-t-3xl border-t border-slate-700 p-4 space-y-3 animate-bottom-sheet max-w-md mx-auto w-full">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-bold text-white text-sm">Atur Interval Part</h3>
-                <button @click="showIntervalModal = false" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <p class="text-xs text-slate-400">Rekomendasi interval penggantian <strong class="text-white">{{ activeIntervalPart?.name }}</strong> (KM):</p>
-            <div>
-                <input type="number" inputmode="numeric" pattern="[0-9]*" v-model.number="tempIntervalValue" min="500" step="500" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-3 font-mono text-base font-extrabold outline-none">
-            </div>
-            <div class="flex justify-end space-x-2 pt-2">
-                <button @click="showIntervalModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-400">Batal</button>
-                <button @click="saveIntervalUpdate()" class="px-5 py-2 rounded-xl text-xs font-extrabold bg-brand-600 text-white">Simpan Interval</button>
-            </div>
+        <!-- CHECKLIST SPAREPART TERGANTI -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Sparepart yang Diganti / Direset</label>
+          <div id="formPartCheckboxes" class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 bg-slate-800/60 rounded-xl border border-slate-700/60 text-xs">
+            <!-- Rendered via JS -->
+          </div>
         </div>
-    </div>
 
-    <!-- RECEIPT DETAIL MODAL -->
-    <div v-if="showDetailModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end">
-        <div class="bg-slate-900 rounded-t-3xl border-t border-slate-700 p-4 space-y-4 animate-bottom-sheet max-w-md mx-auto w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-bold text-white text-sm flex items-center gap-1.5"><i class="fa-solid fa-receipt text-brand-400"></i> Nota Pemeliharaan</h3>
-                <button @click="showDetailModal = false" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <div class="space-y-3 text-xs bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-                <div class="flex justify-between border-b border-slate-800 pb-2">
-                    <span class="text-slate-400">Motor:</span>
-                    <strong class="text-white">{{ getBikeName(selectedLogDetail?.bikeId) }}</strong>
-                </div>
-                <div class="flex justify-between border-b border-slate-800 pb-2">
-                    <span class="text-slate-400">Tanggal:</span>
-                    <strong class="text-white">{{ formatDate(selectedLogDetail?.date) }}</strong>
-                </div>
-                <div class="flex justify-between border-b border-slate-800 pb-2">
-                    <span class="text-slate-400">Odometer:</span>
-                    <strong class="text-white font-mono">{{ formatNumber(selectedLogDetail?.odometer) }} KM</strong>
-                </div>
-                <div class="flex justify-between border-b border-slate-800 pb-2">
-                    <span class="text-slate-400">Tipe Catatan:</span>
-                    <span :class="selectedLogDetail?.type === 'INSIDENTAL' ? 'text-amber-400 font-bold' : 'text-brand-400 font-bold'">
-                        {{ selectedLogDetail?.type === 'INSIDENTAL' ? '⚡ Perbaikan Insidental' : '🔄 Servis Berkala' }}
-                    </span>
-                </div>
-                <div>
-                    <span class="text-slate-400 block mb-1">Part Diganti:</span>
-                    <div class="flex flex-wrap gap-1">
-                        <span v-for="partName in getLogPartNames(selectedLogDetail)" :key="partName" class="bg-slate-900 text-brand-400 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
-                            {{ partName }}
-                        </span>
-                    </div>
-                </div>
-                <div class="pt-2 border-t border-slate-800 space-y-1">
-                    <div class="flex justify-between text-slate-400"><span>Biaya Part:</span><span>{{ formatRupiah(selectedLogDetail?.partCost) }}</span></div>
-                    <div class="flex justify-between text-slate-400"><span>Biaya Jasa:</span><span>{{ formatRupiah(selectedLogDetail?.laborCost) }}</span></div>
-                    <div class="flex justify-between text-white font-extrabold text-sm pt-1 border-t border-slate-800">
-                        <span>Total:</span><span class="text-brand-400">{{ formatRupiah(selectedLogDetail?.totalCost) }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <button @click="showDetailModal = false" class="w-full bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs">Tutup Nota</button>
+        <!-- MEREK SPAREPART & GARANSI (OPSIONAL) -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Merek Sparepart / Catatan Part</label>
+          <input type="text" id="inputServisMerekPart" placeholder="Misal: Oli Yamalube 10W-40, V-Belt Gates" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs">
         </div>
-    </div>
 
-    <!-- CUSTOM CONFIRMATION MODAL -->
-    <div v-if="showConfirmModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 max-w-xs w-full space-y-3 shadow-2xl">
-            <h4 class="font-bold text-white text-sm">{{ confirmTitle }}</h4>
-            <p class="text-xs text-slate-300 leading-relaxed">{{ confirmMessage }}</p>
-            <div class="flex justify-end space-x-2 pt-2">
-                <button @click="showConfirmModal = false" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 bg-slate-800">Batal</button>
-                <button @click="executeConfirmAction()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-600 text-white">Ya, Lanjutkan</button>
-            </div>
+        <!-- BIAYA PART & JASA -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Total Biaya Part (Rp)</label>
+            <input type="number" inputmode="numeric" id="inputServisBiayaPart" placeholder="0" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Biaya Jasa Mekanik (Rp)</label>
+            <input type="number" inputmode="numeric" id="inputServisBiayaJasa" placeholder="0" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs">
+          </div>
         </div>
+
+        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all text-xs">
+          💾 Simpan Catatan Servis
+        </button>
+      </form>
     </div>
+  </div>
 
-    <!-- 2-STEP FACTORY RESET MODAL -->
-    <div v-if="showFactoryResetModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-rose-500/40 rounded-2xl p-5 max-w-xs w-full space-y-4 shadow-2xl">
-            
-            <div v-if="factoryResetStep === 1" class="space-y-3">
-                <div class="w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-lg mx-auto">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <h4 class="font-extrabold text-white text-center text-sm">Factory Reset Data?</h4>
-                <p class="text-[11px] text-slate-300 text-center leading-relaxed">
-                    Tindakan ini akan **MENGHAPUS PERMANEN** seluruh data garasi, sepeda motor, catatan servis, dan kesehatan part dari HP Anda.
-                </p>
-                <div class="pt-2 space-y-2">
-                    <button @click="factoryResetStep = 2" class="w-full bg-rose-600 text-white font-bold py-2.5 rounded-xl text-xs">
-                        Saya Paham, Lanjut Step 2
-                    </button>
-                    <button @click="showFactoryResetModal = false" class="w-full bg-slate-800 text-slate-300 font-bold py-2 rounded-xl text-xs">
-                        Batal
-                    </button>
-                </div>
-            </div>
+  <!-- MODAL: KELOLA/TAMBAH PART KUSTOM (BOTTOM SHEET) -->
+  <div id="modalAddPart" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 w-full max-w-md rounded-t-3xl p-5 space-y-4 bottom-sheet">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">Tambah / Edit Part Servis</h3>
+        <button onclick="closeModalAddPart()" class="text-slate-400 hover:text-white font-bold p-1">✕</button>
+      </div>
 
-            <div v-else class="space-y-3">
-                <h4 class="font-extrabold text-rose-400 text-center text-sm">Konfirmasi Akhir (Step 2/2)</h4>
-                <p class="text-[11px] text-slate-300 text-center">
-                    Ketik kata <strong class="text-white">RESET</strong> untuk menghapus seluruh isi data aplikasi:
-                </p>
-                <input type="text" v-model="resetConfirmInput" placeholder="Ketik RESET" class="w-full bg-slate-950 border border-rose-500/50 text-white text-center font-mono font-bold rounded-xl p-2 text-xs outline-none">
-                
-                <div class="pt-2 space-y-2">
-                    <button @click="executeFactoryReset()" :disabled="resetConfirmInput !== 'RESET'" 
-                            :class="resetConfirmInput === 'RESET' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-600 cursor-not-allowed'"
-                            class="w-full font-extrabold py-2.5 rounded-xl text-xs transition-colors">
-                        HAPUS TOTAL DATA
-                    </button>
-                    <button @click="showFactoryResetModal = false" class="w-full bg-slate-800 text-slate-300 font-bold py-2 rounded-xl text-xs">
-                        Batal
-                    </button>
-                </div>
-            </div>
-
+      <form id="formAddPart" onsubmit="handleSavePart(event)" class="space-y-3">
+        <input type="hidden" id="inputPartId">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Nama Komponen / Sparepart</label>
+          <input type="text" id="inputPartName" placeholder="Misal: Lampu Depan, Kampas Kopling" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs" required>
         </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Target Interval (Bulan)</label>
+            <input type="number" inputmode="numeric" id="inputPartIntervalMonths" min="1" placeholder="Misal: 6" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Pilih Emoji / Ikon</label>
+            <input type="text" id="inputPartIcon" placeholder="Misal: 💡" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Berlaku Untuk Jenis Motor</label>
+          <select id="inputPartTargetType" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs">
+            <option value="all">Semua Jenis Motor</option>
+            <option value="matic">Khusus Motor Matic (CVT)</option>
+            <option value="bebek">Khusus Motor Bebek / Manual (Rantai)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all text-xs">
+          💾 Simpan Konfigurasi Part
+        </button>
+      </form>
     </div>
+  </div>
 
-    <!-- TOAST NOTIFICATION MOBILE -->
-    <div v-if="toastMessage" class="fixed top-14 left-4 right-4 z-50 bg-slate-800/95 border border-slate-700 text-white px-3.5 py-2.5 rounded-2xl shadow-2xl text-xs font-semibold flex items-center space-x-2.5 max-w-xs mx-auto animate-bounce">
-        <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
-        <span>{{ toastMessage }}</span>
+  <!-- MODAL: TAMBAH MOTOR BARU (BOTTOM SHEET) -->
+  <div id="modalAddMotor" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 w-full max-w-md rounded-t-3xl p-5 space-y-4 bottom-sheet">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">Tambah Sepeda Motor</h3>
+        <button onclick="closeModalAddMotor()" class="text-slate-400 hover:text-white font-bold p-1">✕</button>
+      </div>
+
+      <form id="formAddMotor" onsubmit="handleSaveMotor(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Nama Panggilan Motor</label>
+          <input type="text" id="inputMotorNama" placeholder="Misal: NMAX Putih / Vario Hitam" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs" required>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Merk & Tipe</label>
+            <input type="text" id="inputMotorTipe" placeholder="Misal: Yamaha NMAX 155" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Kategori Transmisi</label>
+            <select id="inputMotorKategori" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs">
+              <option value="matic">Matic (CVT)</option>
+              <option value="bebek">Bebek / Manual (Rantai)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Nomor Polisi (Plat Motor)</label>
+          <input type="text" id="inputMotorPlat" placeholder="Misal: B 1234 ABC" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs">
+        </div>
+
+        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all text-xs">
+          🛵 Tambahkan ke Garasi
+        </button>
+      </form>
     </div>
+  </div>
 
-</div>
+  <!-- MODAL: FACTORY RESET CONFIRMATION (2 STEP) -->
+  <div id="modalResetConfirm" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-5 space-y-4 text-center">
+      <div class="w-12 h-12 bg-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto text-2xl font-black">
+        ⚠️
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-white">Reset Total Data?</h3>
+        <p class="text-xs text-slate-400 mt-1">Tindakan ini akan menghapus seluruh data motor dan riwayat servis secara permanen.</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="closeModalResetConfirm()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs">
+          Batal
+        </button>
+        <button onclick="executeFactoryReset()" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg">
+          Ya, Hapus Semua
+        </button>
+      </div>
+    </div>
+  </div>
 
-<!-- APPLICATION VUE LOGIC -->
-<script>
-const { createApp } = Vue;
+  <!-- JAVASCRIPT LOGIC STORAGE & APP CONTROLLER -->
+  <script>
+    // DEFAULT PARTS LIST WITH ACCURATE TIME INTERVALS (IN MONTHS)
+    const DEFAULT_PARTS_LIST = [
+      { id: 'oli_mesin', name: 'Oli Mesin', intervalMonths: 2, category: 'Mesin', targetType: 'all', icon: '🛢️', approxCost: 65000 },
+      { id: 'oli_gardan', name: 'Oli Gardan / Transmisi', intervalMonths: 6, category: 'Transmisi', targetType: 'matic', icon: '⚙️', approxCost: 25000 },
+      { id: 'busi', name: 'Busi Engine', intervalMonths: 6, category: 'Pengapian', targetType: 'all', icon: '🔌', approxCost: 35000 },
+      { id: 'filter_udara', name: 'Filter Udara', intervalMonths: 12, category: 'Mesin', targetType: 'all', icon: '🌪️', approxCost: 55000 },
+      { id: 'coolant', name: 'Air Radiator / Coolant', intervalMonths: 12, category: 'Pendingin', targetType: 'all', icon: '💧', approxCost: 40000 },
+      { id: 'vbelt', name: 'V-Belt & Roller CVT', intervalMonths: 18, category: 'Transmisi', targetType: 'matic', icon: '⛓️', approxCost: 185000 },
+      { id: 'rantai', name: 'Rantai & Gear Set', intervalMonths: 18, category: 'Transmisi', targetType: 'bebek', icon: '⚙️', approxCost: 175000 },
+      { id: 'kampas_rem', name: 'Kampas Rem (Depan/Blk)', intervalMonths: 12, category: 'Pengereman', targetType: 'all', icon: '🛑', approxCost: 75000 },
+      { id: 'minyak_rem', name: 'Minyak Rem', intervalMonths: 24, category: 'Pengereman', targetType: 'all', icon: '🛢️', approxCost: 25000 },
+      { id: 'aki', name: 'Aki / Battery', intervalMonths: 18, category: 'Kelistrikan', targetType: 'all', icon: '🔋', approxCost: 240000 },
+      { id: 'ban', name: 'Ban (Depan / Belakang)', intervalMonths: 24, category: 'Kaki-kaki', targetType: 'all', icon: '🛞', approxCost: 320000 }
+    ];
 
-const TRACKED_PARTS_MASTER = [
-    { id: 'oli_mesin', name: 'Oli Mesin', icon: 'fa-solid fa-oil-can', defaultIntervalKm: 2500, category: 'Mesin' },
-    { id: 'oli_gardan', name: 'Oli Gardan (CVT)', icon: 'fa-solid fa-gears', defaultIntervalKm: 8000, category: 'Transmisi' },
-    { id: 'vbelt', name: 'V-Belt / Rantai Roda', icon: 'fa-solid fa-dharmachakra', defaultIntervalKm: 20000, category: 'Transmisi' },
-    { id: 'busi', name: 'Busi', icon: 'fa-solid fa-bolt', defaultIntervalKm: 8000, category: 'Pengapian' },
-    { id: 'filter_udara', name: 'Filter Udara', icon: 'fa-solid fa-wind', defaultIntervalKm: 10000, category: 'Mesin' },
-    { id: 'kampas_rem', name: 'Kampas Rem', icon: 'fa-solid fa-hand-back-fist', defaultIntervalKm: 10000, category: 'Pengereman' },
-    { id: 'coolant', name: 'Air Radiator / Coolant', icon: 'fa-solid fa-temperature-arrow-down', defaultIntervalKm: 12000, category: 'Pendingin' },
-    { id: 'ban', name: 'Ban Depan/Belakang', icon: 'fa-solid fa-circle-dot', defaultIntervalKm: 18000, category: 'Kaki-kaki' },
-    { id: 'aki', name: 'Aki / Battery', icon: 'fa-solid fa-car-battery', defaultIntervalKm: 25000, category: 'Kelistrikan' }
-];
+    // INITIAL MOTORCYCLE PRESETS (USER'S 4 MOTORS)
+    const DEFAULT_MOTORS = [
+      { id: 'm1', name: 'NMAX', type: 'Yamaha NMAX 155', category: 'matic', plat: 'B 4123 NMX', color: 'from-blue-600 to-indigo-700', lastRoutineDate: '2026-09-10' },
+      { id: 'm2', name: 'Vario', type: 'Honda Vario 125', category: 'matic', plat: 'B 5678 VAR', color: 'from-rose-600 to-red-700', lastRoutineDate: '2026-08-15' },
+      { id: 'm3', name: 'Beat', type: 'Honda Beat Street', category: 'matic', plat: 'B 3456 BET', color: 'from-amber-500 to-orange-600', lastRoutineDate: '2026-10-01' },
+      { id: 'm4', name: 'Vega R', type: 'Yamaha Vega R 110', category: 'bebek', plat: 'B 6789 VEG', color: 'from-emerald-600 to-teal-700', lastRoutineDate: '2026-07-20' }
+    ];
 
-const INITIAL_BIKES = [
-    {
-        id: 'nmax',
-        name: 'Yamaha NMAX 155',
-        platNumber: 'B 4589 NMX',
-        year: '2022',
-        currentKm: 18500,
-        lastPeriodicDate: '2026-10-15',
-        nextPeriodicDate: '2026-11-15',
-        nextPeriodicKm: 20500,
-        icon: 'fa-motorcycle',
-        badgeColor: 'from-blue-600 to-indigo-600',
-        partRecords: {
-            'oli_mesin': { lastKm: 18500, lastDate: '2026-10-15', intervalKm: 2500 },
-            'oli_gardan': { lastKm: 16000, lastDate: '2026-06-10', intervalKm: 8000 },
-            'vbelt': { lastKm: 10000, lastDate: '2026-01-15', intervalKm: 20000 },
-            'busi': { lastKm: 14000, lastDate: '2026-04-20', intervalKm: 8000 },
-            'filter_udara': { lastKm: 18500, lastDate: '2026-10-15', intervalKm: 10000 },
-            'kampas_rem': { lastKm: 12000, lastDate: '2026-03-01', intervalKm: 10000 },
-            'coolant': { lastKm: 15000, lastDate: '2026-05-10', intervalKm: 12000 },
-            'ban': { lastKm: 10000, lastDate: '2026-01-10', intervalKm: 18000 },
-            'aki': { lastKm: 5000, lastDate: '2025-06-01', intervalKm: 25000 }
+    // STATE MANAGEMENT
+    let motors = [];
+    let partsConfig = [];
+    let partHealthStates = {}; // { motorId: { partId: { lastChangedDate: 'YYYY-MM-DD' } } }
+    let serviceLogs = [];
+    let chartInstance = null;
+
+    // INITIALIZATION ON LOAD
+    document.addEventListener('DOMContentLoaded', () => {
+      initData();
+      renderAllViews();
+      document.getElementById('inputServisTanggal').value = new Date().toISOString().split('T')[0];
+    });
+
+    function initData() {
+      const storedMotors = localStorage.getItem('motocare_motors');
+      const storedParts = localStorage.getItem('motocare_parts');
+      const storedStates = localStorage.getItem('motocare_states');
+      const storedLogs = localStorage.getItem('motocare_logs');
+
+      motors = storedMotors ? JSON.parse(storedMotors) : DEFAULT_MOTORS;
+      partsConfig = storedParts ? JSON.parse(storedParts) : DEFAULT_PARTS_LIST;
+      partHealthStates = storedStates ? JSON.parse(storedStates) : {};
+      serviceLogs = storedLogs ? JSON.parse(storedLogs) : [];
+
+      // Ensure partHealthStates initialized for each motor
+      motors.forEach(m => {
+        if (!partHealthStates[m.id]) {
+          partHealthStates[m.id] = {};
         }
-    },
-    {
-        id: 'vario',
-        name: 'Honda Vario 160',
-        platNumber: 'B 3210 VAR',
-        year: '2023',
-        currentKm: 14200,
-        lastPeriodicDate: '2026-09-20',
-        nextPeriodicDate: '2026-10-20',
-        nextPeriodicKm: 16000,
-        icon: 'fa-motorcycle',
-        badgeColor: 'from-red-600 to-rose-600',
-        partRecords: {
-            'oli_mesin': { lastKm: 14200, lastDate: '2026-09-20', intervalKm: 2500 },
-            'oli_gardan': { lastKm: 14200, lastDate: '2026-09-20', intervalKm: 8000 },
-            'vbelt': { lastKm: 2000, lastDate: '2025-08-10', intervalKm: 20000 },
-            'busi': { lastKm: 10000, lastDate: '2026-03-10', intervalKm: 8000 },
-            'filter_udara': { lastKm: 10000, lastDate: '2026-03-10', intervalKm: 10000 },
-            'kampas_rem': { lastKm: 14200, lastDate: '2026-09-20', intervalKm: 10000 },
-            'coolant': { lastKm: 10000, lastDate: '2026-03-10', intervalKm: 12000 },
-            'ban': { lastKm: 8000, lastDate: '2026-01-05', intervalKm: 18000 },
-            'aki': { lastKm: 4000, lastDate: '2025-05-12', intervalKm: 25000 }
-        }
-    },
-    {
-        id: 'beat',
-        name: 'Honda Beat 110',
-        platNumber: 'B 6742 BET',
-        year: '2021',
-        currentKm: 8900,
-        lastPeriodicDate: '2026-10-28',
-        nextPeriodicDate: '2026-11-28',
-        nextPeriodicKm: 11000,
-        icon: 'fa-motorcycle',
-        badgeColor: 'from-amber-600 to-orange-600',
-        partRecords: {
-            'oli_mesin': { lastKm: 8900, lastDate: '2026-10-28', intervalKm: 2500 },
-            'oli_gardan': { lastKm: 6000, lastDate: '2026-05-01', intervalKm: 8000 },
-            'vbelt': { lastKm: 1000, lastDate: '2025-04-01', intervalKm: 20000 },
-            'busi': { lastKm: 6000, lastDate: '2026-05-01', intervalKm: 8000 },
-            'filter_udara': { lastKm: 8900, lastDate: '2026-10-28', intervalKm: 10000 },
-            'kampas_rem': { lastKm: 5000, lastDate: '2026-03-01', intervalKm: 10000 },
-            'ban': { lastKm: 8900, lastDate: '2026-10-28', intervalKm: 18000 },
-            'aki': { lastKm: 2000, lastDate: '2025-03-15', intervalKm: 25000 }
-        }
-    },
-    {
-        id: 'vega',
-        name: 'Yamaha Vega R 110',
-        platNumber: 'B 1998 VEG',
-        year: '2008',
-        currentKm: 32400,
-        lastPeriodicDate: '2026-08-10',
-        nextPeriodicDate: '2026-09-10',
-        nextPeriodicKm: 34000,
-        icon: 'fa-motorcycle',
-        badgeColor: 'from-emerald-600 to-teal-600',
-        partRecords: {
-            'oli_mesin': { lastKm: 32400, lastDate: '2026-08-10', intervalKm: 2500 },
-            'vbelt': { lastKm: 32400, lastDate: '2026-08-10', intervalKm: 20000 },
-            'busi': { lastKm: 32400, lastDate: '2026-08-10', intervalKm: 8000 },
-            'filter_udara': { lastKm: 25000, lastDate: '2025-11-01', intervalKm: 10000 },
-            'kampas_rem': { lastKm: 28000, lastDate: '2026-02-15', intervalKm: 10000 },
-            'ban': { lastKm: 20000, lastDate: '2025-06-01', intervalKm: 18000 },
-            'aki': { lastKm: 15000, lastDate: '2025-01-01', intervalKm: 25000 }
-        }
+        // Set default last changed date if empty
+        partsConfig.forEach(p => {
+          if (!partHealthStates[m.id][p.id]) {
+            partHealthStates[m.id][p.id] = { lastChangedDate: m.lastRoutineDate || '2026-08-01' };
+          }
+        });
+      });
+
+      saveToLocalStorage();
     }
-];
 
-const INITIAL_LOGS = [
-    {
-        id: 'LOG-101',
-        bikeId: 'nmax',
-        type: 'RUTIN',
-        date: '2026-10-15',
-        odometer: 18500,
-        workshop: 'Yamaha Flagship Shop',
-        replacedPartIds: ['oli_mesin', 'filter_udara'],
-        partBrand: 'Yamalube Super Sport',
-        warrantyNotes: 'Garansi 1 Bulan',
-        partCost: 165000,
-        laborCost: 50000,
-        totalCost: 215000,
-        nextPeriodicDate: '2026-11-15',
-        nextPeriodicKm: 20500,
-        notes: 'Servis rutin berkala NMAX.'
-    },
-    {
-        id: 'LOG-102',
-        bikeId: 'vario',
-        type: 'RUTIN',
-        date: '2026-09-20',
-        odometer: 14200,
-        workshop: 'AHASS Utama',
-        replacedPartIds: ['oli_mesin', 'oli_gardan', 'kampas_rem'],
-        partBrand: 'AHM Oil MPX2',
-        warrantyNotes: '',
-        partCost: 140000,
-        laborCost: 45000,
-        totalCost: 185000,
-        nextPeriodicDate: '2026-10-20',
-        nextPeriodicKm: 16000,
-        notes: 'Servis rutin berkala Vario 160.'
-    },
-    {
-        id: 'LOG-103',
-        bikeId: 'beat',
-        type: 'INSIDENTAL',
-        date: '2026-10-28',
-        odometer: 8900,
-        workshop: 'Planet Ban',
-        replacedPartIds: ['ban'],
-        partBrand: 'FDR Sport Zevo Tubeless',
-        warrantyNotes: 'Garansi Bocor 7 Hari',
-        partCost: 230000,
-        laborCost: 20000,
-        totalCost: 250000,
-        nextPeriodicDate: '',
-        nextPeriodicKm: 0,
-        notes: 'Ganti ban belakang karena bocor kena paku.'
+    function saveToLocalStorage() {
+      localStorage.setItem('motocare_motors', JSON.stringify(motors));
+      localStorage.setItem('motocare_parts', JSON.stringify(partsConfig));
+      localStorage.setItem('motocare_states', JSON.stringify(partHealthStates));
+      localStorage.setItem('motocare_logs', JSON.stringify(serviceLogs));
     }
-];
 
-createApp({
-    data() {
-        return {
-            activeTab: 'garasi',
-            bikes: JSON.parse(localStorage.getItem('motocare_pro_bikes')) || INITIAL_BIKES,
-            serviceLogs: JSON.parse(localStorage.getItem('motocare_pro_logs')) || INITIAL_LOGS,
-            trackedPartsMaster: TRACKED_PARTS_MASTER,
-
-            colorOptions: [
-                { name: 'Biru', class: 'from-blue-600 to-indigo-600' },
-                { name: 'Merah', class: 'from-red-600 to-rose-600' },
-                { name: 'Kuning', class: 'from-amber-600 to-orange-600' },
-                { name: 'Hijau', class: 'from-emerald-600 to-teal-600' }
-            ],
-
-            searchQuery: '',
-            filterBikeId: 'ALL',
-            filterLogType: 'ALL',
-            selectedHealthBikeId: 'nmax',
-            toastMessage: '',
-
-            // Modals Visibility
-            showLogModal: false,
-            isEditingLog: false,
-            showBikeModal: false,
-            isEditingBike: false,
-            showKmModal: false,
-            showIntervalModal: false,
-            showDetailModal: false,
-
-            // Custom Confirm Modal
-            showConfirmModal: false,
-            confirmTitle: '',
-            confirmMessage: '',
-            confirmActionCallback: null,
-
-            // Factory Reset Modal
-            showFactoryResetModal: false,
-            factoryResetStep: 1,
-            resetConfirmInput: '',
-
-            activeKmBike: null,
-            tempKmValue: 0,
-            activeIntervalPart: null,
-            tempIntervalValue: 0,
-            selectedLogDetail: null,
-
-            formBike: {
-                id: null,
-                name: '',
-                platNumber: '',
-                year: '',
-                currentKm: 0,
-                badgeColor: 'from-blue-600 to-indigo-600'
-            },
-
-            formLog: {
-                id: null,
-                bikeId: 'nmax',
-                type: 'INSIDENTAL',
-                date: new Date().toISOString().substr(0, 10),
-                odometer: 0,
-                workshop: '',
-                replacedPartIds: [],
-                partBrand: '',
-                warrantyNotes: '',
-                partCost: 0,
-                laborCost: 0,
-                nextPeriodicDate: '',
-                nextPeriodicKm: 0,
-                notes: ''
-            },
-
-            bikeCostChartInstance: null,
-            monthlyCostChartInstance: null
-        }
-    },
-
-    computed: {
-        allActiveAlerts() {
-            const alerts = [];
-            const today = new Date();
-            today.setHours(0,0,0,0);
-
-            this.bikes.forEach(bike => {
-                // 1. Routine Service Alert Check
-                const pStatus = this.getBikePeriodicStatus(bike);
-                if (pStatus === 'overdue' || pStatus === 'perhatian') {
-                    let desc = '';
-                    if (bike.nextPeriodicDate) {
-                        const nextDate = new Date(bike.nextPeriodicDate);
-                        const diffDays = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
-                        if (diffDays < 0) desc = `Terlewat ${Math.abs(diffDays)} hari (${this.formatDate(bike.nextPeriodicDate)})`;
-                        else if (diffDays === 0) desc = `Jatuh tempo HARI INI!`;
-                        else desc = `Jatuh tempo dalam ${diffDays} hari (${this.formatDate(bike.nextPeriodicDate)})`;
-                    } else {
-                        desc = 'Jadwal servis rutin belum diatur';
-                    }
-
-                    alerts.push({
-                        id: 'alert-periodic-' + bike.id,
-                        bikeId: bike.id,
-                        bikeName: bike.name,
-                        bikePlat: bike.platNumber,
-                        badgeColor: bike.badgeColor,
-                        icon: bike.icon || 'fa-motorcycle',
-                        type: 'RUTIN',
-                        title: 'Servis Berkala / Rutin',
-                        detail: desc,
-                        partId: null,
-                        partName: 'Servis Rutin'
-                    });
-                }
-
-                // 2. Independent Part Lifespan Check (≤ 30% health)
-                this.trackedPartsMaster.forEach(masterPart => {
-                    const rec = (bike.partRecords && bike.partRecords[masterPart.id]) ? bike.partRecords[masterPart.id] : {};
-                    const lastKm = rec.lastKm || 0;
-                    const intervalKm = rec.intervalKm || masterPart.defaultIntervalKm;
-                    const kmUsed = Math.max(0, bike.currentKm - lastKm);
-                    const kmRemaining = Math.max(0, intervalKm - kmUsed);
-                    let pct = Math.round((kmRemaining / intervalKm) * 100);
-                    if (pct < 0) pct = 0;
-
-                    if (pct <= 30) {
-                        alerts.push({
-                            id: 'alert-part-' + bike.id + '-' + masterPart.id,
-                            bikeId: bike.id,
-                            bikeName: bike.name,
-                            bikePlat: bike.platNumber,
-                            badgeColor: bike.badgeColor,
-                            icon: masterPart.icon,
-                            type: 'INSIDENTAL',
-                            title: `${masterPart.name} Perlu Diganti`,
-                            detail: `Kesehatan: ${pct}% • Sisa ${this.formatNumber(kmRemaining)} KM`,
-                            partId: masterPart.id,
-                            partName: masterPart.name,
-                            healthPercent: pct
-                        });
-                    }
-                });
-            });
-
-            return alerts;
-        },
-
-        filteredLogs() {
-            return this.serviceLogs.filter(log => {
-                const matchesBike = this.filterBikeId === 'ALL' || log.bikeId === this.filterBikeId;
-                const matchesType = this.filterLogType === 'ALL' || log.type === this.filterLogType;
-                const searchLower = this.searchQuery.toLowerCase();
-                const partNames = this.getLogPartNames(log).join(' ').toLowerCase();
-                const matchesSearch = !this.searchQuery || 
-                    (log.workshop && log.workshop.toLowerCase().includes(searchLower)) ||
-                    (log.notes && log.notes.toLowerCase().includes(searchLower)) ||
-                    partNames.includes(searchLower) ||
-                    this.getBikeName(log.bikeId).toLowerCase().includes(searchLower);
-                return matchesBike && matchesType && matchesSearch;
-            }).sort((a, b) => new Date(b.date) - new Date(a.date));
-        },
-
-        recentLogs() {
-            return [...this.serviceLogs].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 4);
-        },
-
-        activeBikePartHealth() {
-            const bike = this.bikes.find(b => b.id === this.selectedHealthBikeId);
-            if (!bike) return [];
-
-            return this.trackedPartsMaster.map(masterPart => {
-                const rec = (bike.partRecords && bike.partRecords[masterPart.id]) ? bike.partRecords[masterPart.id] : {};
-                const lastKm = rec.lastKm || 0;
-                const lastDate = rec.lastDate || 'Belum Pernah';
-                const intervalKm = rec.intervalKm || masterPart.defaultIntervalKm;
-
-                const kmUsed = Math.max(0, bike.currentKm - lastKm);
-                const kmRemaining = Math.max(0, intervalKm - kmUsed);
-                let healthPercent = Math.round((kmRemaining / intervalKm) * 100);
-                if (healthPercent > 100) healthPercent = 100;
-                if (healthPercent < 0) healthPercent = 0;
-
-                return {
-                    ...masterPart,
-                    lastKm: lastKm,
-                    lastDate: lastDate,
-                    intervalKm: intervalKm,
-                    kmUsed: kmUsed,
-                    kmRemaining: kmRemaining,
-                    healthPercent: healthPercent
-                };
-            });
-        },
-
-        computedForecastBudget() {
-            let totalEstimate = 0;
-            const items = [];
-
-            this.bikes.forEach(bike => {
-                const pStatus = this.getBikePeriodicStatus(bike);
-                if (pStatus === 'overdue' || pStatus === 'perhatian') {
-                    const est = 150000;
-                    totalEstimate += est;
-                    items.push({ bikeName: bike.name, item: 'Servis Berkala / Rutin', cost: est });
-                }
-
-                this.trackedPartsMaster.forEach(masterPart => {
-                    const rec = (bike.partRecords && bike.partRecords[masterPart.id]) ? bike.partRecords[masterPart.id] : {};
-                    const lastKm = rec.lastKm || 0;
-                    const intervalKm = rec.intervalKm || masterPart.defaultIntervalKm;
-                    const kmUsed = Math.max(0, bike.currentKm - lastKm);
-                    const kmRemaining = Math.max(0, intervalKm - kmUsed);
-                    let pct = Math.round((kmRemaining / intervalKm) * 100);
-
-                    if (pct <= 30) {
-                        let estimatedCost = 75000;
-                        if (masterPart.id === 'oli_mesin') estimatedCost = 65000;
-                        else if (masterPart.id === 'oli_gardan') estimatedCost = 35000;
-                        else if (masterPart.id === 'vbelt') estimatedCost = 180000;
-                        else if (masterPart.id === 'ban') estimatedCost = 250000;
-                        else if (masterPart.id === 'aki') estimatedCost = 220000;
-                        else if (masterPart.id === 'busi') estimatedCost = 35000;
-
-                        totalEstimate += estimatedCost;
-                        items.push({ bikeName: bike.name, item: `${masterPart.name} (${pct}% sisa)`, cost: estimatedCost });
-                    }
-                });
-            });
-
-            return { totalEstimate, items };
-        }
-    },
-
-    watch: {
-        bikes: {
-            handler(val) {
-                localStorage.setItem('motocare_pro_bikes', JSON.stringify(val));
-            },
-            deep: true
-        },
-        serviceLogs: {
-            handler(val) {
-                localStorage.setItem('motocare_pro_logs', JSON.stringify(val));
-                this.updateCharts();
-            },
-            deep: true
-        },
-        activeTab(val) {
-            if (val === 'analisis') {
-                this.renderCharts();
-            }
-        }
-    },
-
-    methods: {
-        formatRupiah(num) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num || 0);
-        },
-        formatNumber(num) {
-            return new Intl.NumberFormat('id-ID').format(num || 0);
-        },
-        formatDate(dateStr) {
-            if (!dateStr || dateStr === 'Belum Pernah') return 'Belum Pernah';
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            return new Date(dateStr).toLocaleDateString('id-ID', options);
-        },
-        getBikeName(bikeId) {
-            const b = this.bikes.find(x => x.id === bikeId);
-            return b ? b.name : bikeId;
-        },
-        showToast(msg) {
-            this.toastMessage = msg;
-            setTimeout(() => { this.toastMessage = ''; }, 3000);
-        },
-        getLogPartNames(log) {
-            if (!log || !log.replacedPartIds) return [];
-            return log.replacedPartIds.map(id => {
-                const p = this.trackedPartsMaster.find(m => m.id === id);
-                return p ? p.name : id;
-            });
-        },
-
-        goToAlertCenter() {
-            this.activeTab = 'garasi';
-            this.$nextTick(() => {
-                const el = document.getElementById('alertCenterGarasi');
-                if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        },
-
-        solveAlert(alertItem) {
-            if (alertItem.type === 'RUTIN') {
-                this.openNewLogModal(alertItem.bikeId, 'RUTIN', ['oli_mesin']);
-            } else {
-                this.openNewLogModal(alertItem.bikeId, 'INSIDENTAL', [alertItem.partId]);
-            }
-        },
-
-        getBikePeriodicStatus(bike) {
-            if (!bike.nextPeriodicDate) return 'prima';
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            const nextDate = new Date(bike.nextPeriodicDate);
-            const diffDays = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
-            const isKmOverdue = bike.currentKm >= bike.nextPeriodicKm;
-
-            if (diffDays < 0 || isKmOverdue) return 'overdue';
-            if (diffDays <= 7) return 'perhatian';
-            return 'prima';
-        },
-
-        getStatusBadgeClass(status) {
-            if (status === 'overdue') return 'bg-rose-500/20 text-rose-400 border border-rose-500/40';
-            if (status === 'perhatian') return 'bg-amber-500/20 text-amber-400 border border-amber-500/40';
-            return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
-        },
-
-        getStatusText(status) {
-            if (status === 'overdue') return 'Terlewat';
-            if (status === 'perhatian') return 'Segera Servis';
-            return 'Prima';
-        },
-
-        getDaysRemainingClass(bike) {
-            const status = this.getBikePeriodicStatus(bike);
-            if (status === 'overdue') return 'text-rose-400 font-bold';
-            if (status === 'perhatian') return 'text-amber-400 font-bold';
-            return 'text-emerald-400 font-semibold';
-        },
-
-        getNextPeriodicText(bike) {
-            if (!bike.nextPeriodicDate) return 'Belum Diatur';
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            const nextDate = new Date(bike.nextPeriodicDate);
-            const diffDays = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
-
-            if (diffDays < 0) return `Terlewat ${Math.abs(diffDays)} Hari!`;
-            if (diffDays === 0) return 'Hari ini!';
-            return `${diffDays} Hari lagi (${this.formatDate(bike.nextPeriodicDate)})`;
-        },
-
-        getLowestHealthPart(bikeId) {
-            const bike = this.bikes.find(b => b.id === bikeId);
-            if (!bike) return { name: '-', healthPercent: 100, icon: 'fa-gears' };
-
-            let lowest = null;
-            let minPct = 999;
-
-            this.trackedPartsMaster.forEach(masterPart => {
-                const rec = (bike.partRecords && bike.partRecords[masterPart.id]) ? bike.partRecords[masterPart.id] : {};
-                const lastKm = rec.lastKm || 0;
-                const intervalKm = rec.intervalKm || masterPart.defaultIntervalKm;
-                const kmUsed = Math.max(0, bike.currentKm - lastKm);
-                const kmRemaining = Math.max(0, intervalKm - kmUsed);
-                let pct = Math.round((kmRemaining / intervalKm) * 100);
-                if (pct < 0) pct = 0;
-
-                if (pct < minPct) {
-                    minPct = pct;
-                    lowest = { name: masterPart.name, healthPercent: pct, icon: masterPart.icon };
-                }
-            });
-
-            return lowest || { name: 'Oli Mesin', healthPercent: 100, icon: 'fa-oil-can' };
-        },
-
-        getHealthStatusBadgeClass(pct) {
-            if (pct <= 25) return 'bg-rose-500/20 text-rose-400 border border-rose-500/30';
-            if (pct <= 50) return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
-            return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-        },
-
-        getHealthColorClass(pct) {
-            if (pct <= 25) return 'bg-rose-500';
-            if (pct <= 50) return 'bg-amber-500';
-            return 'bg-emerald-500';
-        },
-
-        getBikeTotalExpense(bikeId) {
-            return this.serviceLogs.filter(l => l.bikeId === bikeId).reduce((sum, l) => sum + (l.totalCost || 0), 0);
-        },
-
-        // --- ACTIONS & MODALS ---
-        selectHealthBikeAndSwitch(bikeId) {
-            this.selectedHealthBikeId = bikeId;
-            this.activeTab = 'health';
-        },
-
-        openBikeModal(bikeToEdit = null) {
-            if (bikeToEdit) {
-                this.isEditingBike = true;
-                this.formBike = JSON.parse(JSON.stringify(bikeToEdit));
-            } else {
-                this.isEditingBike = false;
-                this.formBike = {
-                    id: 'bike-' + Date.now(),
-                    name: '',
-                    platNumber: '',
-                    year: '2023',
-                    currentKm: 0,
-                    badgeColor: 'from-blue-600 to-indigo-600'
-                };
-            }
-            this.showBikeModal = true;
-        },
-
-        saveBikeForm() {
-            if (this.isEditingBike) {
-                const idx = this.bikes.findIndex(b => b.id === this.formBike.id);
-                if (idx !== -1) {
-                    this.bikes.splice(idx, 1, { ...this.bikes[idx], ...this.formBike });
-                }
-            } else {
-                const newBike = {
-                    ...this.formBike,
-                    lastPeriodicDate: '',
-                    nextPeriodicDate: '',
-                    nextPeriodicKm: this.formBike.currentKm + 2000,
-                    icon: 'fa-motorcycle',
-                    partRecords: {}
-                };
-                this.bikes.push(newBike);
-            }
-            this.showBikeModal = false;
-            this.showToast(this.isEditingBike ? 'Data motor diperbarui!' : 'Motor baru ditambahkan ke garasi!');
-        },
-
-        triggerDeleteBikeConfirm(bikeId) {
-            this.confirmTitle = 'Hapus Sepeda Motor?';
-            this.confirmMessage = 'Motor dan catatan terkait akan dihapus dari sistem.';
-            this.confirmActionCallback = () => {
-                this.bikes = this.bikes.filter(b => b.id !== bikeId);
-                this.serviceLogs = this.serviceLogs.filter(l => l.bikeId !== bikeId);
-                this.showToast('Motor berhasil dihapus.');
-            };
-            this.showConfirmModal = true;
-        },
-
-        openKmModal(bike) {
-            this.activeKmBike = bike;
-            this.tempKmValue = bike.currentKm;
-            this.showKmModal = true;
-        },
-
-        saveKmUpdate() {
-            if (this.activeKmBike) {
-                this.activeKmBike.currentKm = this.tempKmValue;
-                this.showKmModal = false;
-                this.showToast(`Odometer ${this.activeKmBike.name} diperbarui ke ${this.formatNumber(this.tempKmValue)} KM!`);
-            }
-        },
-
-        openEditIntervalModal(part) {
-            this.activeIntervalPart = part;
-            this.tempIntervalValue = part.intervalKm;
-            this.showIntervalModal = true;
-        },
-
-        saveIntervalUpdate() {
-            const bike = this.bikes.find(b => b.id === this.selectedHealthBikeId);
-            if (bike && this.activeIntervalPart) {
-                if (!bike.partRecords) bike.partRecords = {};
-                if (!bike.partRecords[this.activeIntervalPart.id]) {
-                    bike.partRecords[this.activeIntervalPart.id] = { lastKm: 0, lastDate: 'Belum Pernah', intervalKm: this.tempIntervalValue };
-                } else {
-                    bike.partRecords[this.activeIntervalPart.id].intervalKm = this.tempIntervalValue;
-                }
-                this.showIntervalModal = false;
-                this.showToast(`Interval ${this.activeIntervalPart.name} diubah ke ${this.formatNumber(this.tempIntervalValue)} KM.`);
-            }
-        },
-
-        quickReplacePart(part) {
-            this.openNewLogModal(this.selectedHealthBikeId, 'INSIDENTAL', [part.id]);
-        },
-
-        onBikeChangeInForm() {
-            const b = this.bikes.find(x => x.id === this.formLog.bikeId);
-            if (b) {
-                this.formLog.odometer = b.currentKm;
-            }
-        },
-
-        openNewLogModal(defaultBikeId = null, defaultType = 'INSIDENTAL', preselectedParts = []) {
-            this.isEditingLog = false;
-            const bikeId = defaultBikeId || (this.bikes.length > 0 ? this.bikes[0].id : 'nmax');
-            const targetBike = this.bikes.find(b => b.id === bikeId);
-            const today = new Date();
-            const nextMonth = new Date();
-            nextMonth.setMonth(nextMonth.getMonth() + 1);
-
-            this.formLog = {
-                id: 'LOG-' + Date.now().toString().slice(-5),
-                bikeId: bikeId,
-                type: defaultType,
-                date: today.toISOString().substr(0, 10),
-                odometer: targetBike ? targetBike.currentKm : 0,
-                workshop: '',
-                replacedPartIds: preselectedParts.length > 0 ? [...preselectedParts] : ['oli_mesin'],
-                partBrand: '',
-                warrantyNotes: '',
-                partCost: 0,
-                laborCost: 0,
-                nextPeriodicDate: nextMonth.toISOString().substr(0, 10),
-                nextPeriodicKm: (targetBike ? targetBike.currentKm : 0) + 2000,
-                notes: ''
-            };
-            this.showLogModal = true;
-        },
-
-        editLogModal(log) {
-            this.isEditingLog = true;
-            this.formLog = JSON.parse(JSON.stringify(log));
-            this.showLogModal = true;
-        },
-
-        closeLogModal() {
-            this.showLogModal = false;
-        },
-
-        saveLogForm() {
-            if (this.formLog.replacedPartIds.length === 0) {
-                this.showToast('Harap pilih minimal 1 part yang diganti.');
-                return;
-            }
-
-            const total = (Number(this.formLog.partCost) || 0) + (Number(this.formLog.laborCost) || 0);
-            const newLogEntry = {
-                ...this.formLog,
-                partCost: Number(this.formLog.partCost) || 0,
-                laborCost: Number(this.formLog.laborCost) || 0,
-                totalCost: total
-            };
-
-            if (this.isEditingLog) {
-                const index = this.serviceLogs.findIndex(l => l.id === newLogEntry.id);
-                if (index !== -1) {
-                    this.serviceLogs.splice(index, 1, newLogEntry);
-                }
-            } else {
-                this.serviceLogs.unshift(newLogEntry);
-            }
-
-            const bike = this.bikes.find(b => b.id === newLogEntry.bikeId);
-            if (bike) {
-                if (newLogEntry.odometer > bike.currentKm) {
-                    bike.currentKm = newLogEntry.odometer;
-                }
-
-                if (!bike.partRecords) bike.partRecords = {};
-
-                newLogEntry.replacedPartIds.forEach(partId => {
-                    const currentInterval = (bike.partRecords[partId] && bike.partRecords[partId].intervalKm) ? 
-                        bike.partRecords[partId].intervalKm : 
-                        (TRACKED_PARTS_MASTER.find(m => m.id === partId)?.defaultIntervalKm || 5000);
-
-                    bike.partRecords[partId] = {
-                        lastKm: newLogEntry.odometer,
-                        lastDate: newLogEntry.date,
-                        intervalKm: currentInterval
-                    };
-                });
-
-                if (newLogEntry.type === 'RUTIN') {
-                    bike.lastPeriodicDate = newLogEntry.date;
-                    bike.nextPeriodicDate = newLogEntry.nextPeriodicDate;
-                    bike.nextPeriodicKm = newLogEntry.nextPeriodicKm;
-                }
-            }
-
-            this.showLogModal = false;
-            this.showToast(this.isEditingLog ? 'Catatan servis diperbarui!' : 'Perbaikan berhasil dicatat & Alert otomatis hilang!');
-        },
-
-        triggerDeleteLogConfirm(logId) {
-            this.confirmTitle = 'Hapus Catatan Servis?';
-            this.confirmMessage = 'Riwayat servis ini akan dihapus dari catatan.';
-            this.confirmActionCallback = () => {
-                this.serviceLogs = this.serviceLogs.filter(l => l.id !== logId);
-                this.showToast('Catatan servis telah dihapus.');
-            };
-            this.showConfirmModal = true;
-        },
-
-        executeConfirmAction() {
-            if (this.confirmActionCallback) {
-                this.confirmActionCallback();
-            }
-            this.showConfirmModal = false;
-        },
-
-        viewLogDetail(log) {
-            this.selectedLogDetail = log;
-            this.showDetailModal = true;
-        },
-
-        exportCalendarICS(bike) {
-            if (!bike.nextPeriodicDate) {
-                this.showToast('Tanggal servis berikutnya belum diatur.');
-                return;
-            }
-            const dateStr = bike.nextPeriodicDate.replace(/-/g, '');
-            const title = `Servis Rutin: ${bike.name} (${bike.platNumber})`;
-            const description = `Pengingat MotoCare Pro: Servis berkala untuk ${bike.name}. Target KM: ${this.formatNumber(bike.nextPeriodicKm)} KM.`;
-            
-            const icsContent = [
-                'BEGIN:VCALENDAR',
-                'VERSION:2.0',
-                'PRODID:-//MotoCare Pro Mobile//NONSGML v1.0//ID',
-                'CALSCALE:GREGORIAN',
-                'BEGIN:VEVENT',
-                `SUMMARY:${title}`,
-                `DESCRIPTION:${description}`,
-                `DTSTART;VALUE=DATE:${dateStr}`,
-                `DTEND;VALUE=DATE:${dateStr}`,
-                'STATUS:CONFIRMED',
-                'BEGIN:VALARM',
-                'TRIGGER:-P1D',
-                'ACTION:DISPLAY',
-                `DESCRIPTION:Pengingat Servis ${bike.name} Besok!`,
-                'END:VALARM',
-                'END:VEVENT',
-                'END:VCALENDAR'
-            ].join('\r\n');
-
-            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', `${bike.name.replace(/\s+/g, '_')}_Servis_Pengingat.ics`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            this.showToast('File pengingat kalender (.ics) diunduh!');
-        },
-
-        renderCharts() {
-            this.$nextTick(() => {
-                const bikeCtx = document.getElementById('bikeCostChart');
-                if (bikeCtx) {
-                    if (this.bikeCostChartInstance) this.bikeCostChartInstance.destroy();
-                    const bikeNames = this.bikes.map(b => b.name);
-                    const bikeExpenses = this.bikes.map(b => this.getBikeTotalExpense(b.id));
-
-                    this.bikeCostChartInstance = new Chart(bikeCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: bikeNames,
-                            datasets: [{
-                                data: bikeExpenses,
-                                backgroundColor: ['#0284c7', '#e11d48', '#d97706', '#059669'],
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Inter', size: 10 } } }
-                            }
-                        }
-                    });
-                }
-
-                const monthCtx = document.getElementById('monthlyCostChart');
-                if (monthCtx) {
-                    if (this.monthlyCostChartInstance) this.monthlyCostChartInstance.destroy();
-                    const monthlyData = {};
-                    this.serviceLogs.forEach(log => {
-                        const dateObj = new Date(log.date);
-                        const monthKey = dateObj.toLocaleDateString('id-ID', { month: 'short' });
-                        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + log.totalCost;
-                    });
-
-                    const labels = Object.keys(monthlyData).reverse();
-                    const values = Object.values(monthlyData).reverse();
-
-                    this.monthlyCostChartInstance = new Chart(monthCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: labels.length > 0 ? labels : ['Bulan Ini'],
-                            datasets: [{
-                                label: 'Biaya (Rp)',
-                                data: values.length > 0 ? values : [0],
-                                backgroundColor: '#38bdf8',
-                                borderRadius: 6
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
-                            scales: {
-                                x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
-                                y: {
-                                    ticks: { color: '#94a3b8', font: { size: 9 }, callback: (v) => 'Rp ' + (v/1000) + 'k' },
-                                    grid: { color: '#334155' }
-                                }
-                            }
-                        }
-                    });
-                }
-            });
-        },
-
-        updateCharts() {
-            if (this.activeTab === 'analisis') {
-                this.renderCharts();
-            }
-        },
-
-        exportJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
-                bikes: this.bikes,
-                serviceLogs: this.serviceLogs
-            }, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `MotoCare_Backup_${new Date().toISOString().substr(0,10)}.json`);
-            dlAnchorElem.click();
-            this.showToast('Data di-export ke JSON!');
-        },
-
-        exportCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,ID,Motor,Tipe,Tanggal,Odometer(KM),Bengkel,Parts,BiayaPart,BiayaJasa,TotalBiaya,Catatan\n";
-            this.serviceLogs.forEach(l => {
-                const partsStr = `"${this.getLogPartNames(l).join('; ')}"`;
-                const notesStr = `"${(l.notes || '').replace(/"/g, '""')}"`;
-                csvContent += `${l.id},${this.getBikeName(l.bikeId)},${l.type},${l.date},${l.odometer},${l.workshop || ''},${partsStr},${l.partCost},${l.laborCost},${l.totalCost},${notesStr}\n`;
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `MotoCare_Riwayat_${new Date().toISOString().substr(0,10)}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            this.showToast('Riwayat di-export ke CSV!');
-        },
-
-        importJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (parsed.bikes && parsed.serviceLogs) {
-                        this.bikes = parsed.bikes;
-                        this.serviceLogs = parsed.serviceLogs;
-                        this.showToast('Data MotoCare berhasil dipulihkan!');
-                    }
-                } catch (err) {
-                    this.showToast('Gagal membaca file JSON.');
-                }
-            };
-            reader.readAsText(file);
-        },
-
-        resetToSampleData() {
-            this.confirmTitle = 'Reset ke Data Sampel Awal?';
-            this.confirmMessage = 'Data akan dikembalikan ke data contoh motor bawaan.';
-            this.confirmActionCallback = () => {
-                this.bikes = JSON.parse(JSON.stringify(INITIAL_BIKES));
-                this.serviceLogs = JSON.parse(JSON.stringify(INITIAL_LOGS));
-                this.showToast('Data dikembalikan ke sampel awal.');
-            };
-            this.showConfirmModal = true;
-        },
-
-        openFactoryResetModal() {
-            this.factoryResetStep = 1;
-            this.resetConfirmInput = '';
-            this.showFactoryResetModal = true;
-        },
-
-        executeFactoryReset() {
-            if (this.resetConfirmInput === 'RESET') {
-                this.bikes = [];
-                this.serviceLogs = [];
-                localStorage.removeItem('motocare_pro_bikes');
-                localStorage.removeItem('motocare_pro_logs');
-                this.showFactoryResetModal = false;
-                this.showToast('Seluruh data berhasil direset ke nol!');
-            }
-        }
-    },
-
-    mounted() {
-        if (!this.bikes || this.bikes.length === 0) {
-            this.bikes = INITIAL_BIKES;
-        }
-        if (!this.serviceLogs || this.serviceLogs.length === 0) {
-            this.serviceLogs = INITIAL_LOGS;
-        }
+    // CALCULATE PART HEALTH PERCENTAGE (PURELY TIME BASED - DAYS/MONTHS)
+    function calculatePartHealth(lastDateStr, intervalMonths) {
+      if (!lastDateStr) return 100;
+      const lastDate = new Date(lastDateStr);
+      const today = new Date();
+      const diffTime = Math.abs(today - lastDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      const targetDays = intervalMonths * 30; // 1 month approx 30 days
+      const daysRemaining = targetDays - diffDays;
+      const percentage = Math.max(0, Math.min(100, Math.round((daysRemaining / targetDays) * 100)));
+
+      return {
+        percentage,
+        daysRemaining,
+        diffDays,
+        isCritical: percentage <= 30
+      };
     }
-}).mount('#app');
-</script>
+
+    // RENDER ALL VIEWS
+    function renderAllViews() {
+      renderDashboard();
+      renderGarasiAlerts();
+      renderRiwayatList();
+      renderPartsSettingsList();
+      renderSelectOptions();
+    }
+
+    // DASHBOARD RENDERER
+    function renderDashboard() {
+      const container = document.getElementById('dashboardMotorCards');
+      container.innerHTML = '';
+
+      let totalAlertsCount = 0;
+      let totalForecastBudget = 0;
+
+      motors.forEach(m => {
+        // Calculate health of parts for this motor
+        let criticalPartsCount = 0;
+        partsConfig.forEach(p => {
+          if (p.targetType !== 'all' && p.targetType !== m.category) return;
+          const lastDate = partHealthStates[m.id]?.[p.id]?.lastChangedDate;
+          const health = calculatePartHealth(lastDate, p.intervalMonths);
+          if (health.isCritical) {
+            criticalPartsCount++;
+            totalAlertsCount++;
+            totalForecastBudget += (p.approxCost || 50000);
+          }
+        });
+
+        const card = document.createElement('div');
+        card.className = `bg-gradient-to-br ${m.color} p-3.5 rounded-2xl text-white shadow-lg relative overflow-hidden flex flex-col justify-between`;
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">${m.category}</span>
+              ${criticalPartsCount > 0 ? `<span class="bg-amber-400 text-slate-950 font-black text-[10px] px-1.5 py-0.5 rounded-full">! ${criticalPartsCount} Alert</span>` : '<span class="text-[10px] bg-emerald-400/20 text-emerald-200 px-1.5 py-0.5 rounded-full">Prima</span>'}
+            </div>
+            <h3 class="text-base font-extrabold leading-tight">${m.name}</h3>
+            <p class="text-[11px] text-white/80">${m.type}</p>
+          </div>
+          <div class="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px]">
+            <span class="text-white/70 font-mono">${m.plat || '-'}</span>
+            <button onclick="navToGarasiMotor('${m.id}')" class="font-bold underline text-white">Detail &rarr;</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Update Header Alert Counter & Forecast Banner
+      document.getElementById('headerAlertCount').innerText = `${totalAlertsCount} Alert`;
+      document.getElementById('alertCountBadge').innerText = `${totalAlertsCount} Kritis`;
+      document.getElementById('dashboardForecastAmount').innerText = `Rp ${totalForecastBudget.toLocaleString('id-ID')}`;
+      document.getElementById('dashboardForecastDesc').innerText = totalAlertsCount > 0 
+        ? `${totalAlertsCount} sparepart kritis perlu diganti bulan ini` 
+        : 'Semua part dalam kondisi prima';
+
+      // Render Recent Logs
+      const recentContainer = document.getElementById('dashboardRecentLogs');
+      recentContainer.innerHTML = '';
+      if (serviceLogs.length === 0) {
+        recentContainer.innerHTML = '<p class="text-xs text-slate-500 text-center py-2">Belum ada riwayat servis yang dicatat.</p>';
+      } else {
+        serviceLogs.slice(0, 3).forEach(log => {
+          const motor = motors.find(m => m.id === log.motorId);
+          const div = document.createElement('div');
+          div.className = 'flex items-center justify-between text-xs py-1.5 border-b border-slate-800/50 last:border-0';
+          div.innerHTML = `
+            <div>
+              <div class="font-bold text-slate-200">${motor ? motor.name : 'Motor'} - <span class="text-brand-400">${log.tipe === 'insidental' ? '⚡ Insidental' : '🔄 Rutin'}</span></div>
+              <div class="text-[10px] text-slate-400">${log.tanggal} • ${log.bengkel || 'Bengkel'}</div>
+            </div>
+            <div class="font-bold text-emerald-400">Rp ${(log.biayaPart + log.biayaJasa).toLocaleString('id-ID')}</div>
+          `;
+          recentContainer.appendChild(div);
+        });
+      }
+    }
+
+    // GARASI & ALERT CENTER RENDERER
+    function renderGarasiAlerts() {
+      const alertListContainer = document.getElementById('alertCenterList');
+      alertListContainer.innerHTML = '';
+
+      let activeAlerts = [];
+
+      motors.forEach(m => {
+        partsConfig.forEach(p => {
+          if (p.targetType !== 'all' && p.targetType !== m.category) return;
+          const lastDate = partHealthStates[m.id]?.[p.id]?.lastChangedDate;
+          const health = calculatePartHealth(lastDate, p.intervalMonths);
+          
+          if (health.isCritical) {
+            activeAlerts.push({ motor: m, part: p, health });
+          }
+        });
+      });
+
+      if (activeAlerts.length === 0) {
+        alertListContainer.innerHTML = `
+          <div class="bg-emerald-950/30 border border-emerald-800/40 rounded-xl p-3 text-center text-xs text-emerald-300">
+            🎉 Semua sparepart 4 motor dalam kondisi sehat! Tidak ada alert perbaikan saat ini.
+          </div>
+        `;
+      } else {
+        activeAlerts.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'bg-slate-800/90 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between text-xs';
+          div.innerHTML = `
+            <div class="space-y-0.5">
+              <div class="flex items-center gap-1.5 font-bold text-white">
+                <span>${item.part.icon}</span> ${item.part.name}
+                <span class="bg-slate-700 text-slate-300 text-[10px] px-1.5 py-0.2 rounded font-normal">${item.motor.name}</span>
+              </div>
+              <div class="text-[11px] text-amber-300">Sisa Kesehatan: <strong>${item.health.percentage}%</strong> (${item.health.daysRemaining <= 0 ? 'Sudah Lewat Jatuh Tempo' : item.health.daysRemaining + ' Hari Lagi'})</div>
+            </div>
+            <button onclick="quickRepairPart('${item.motor.id}', '${item.part.id}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg shadow text-xs">
+              🛠️ Perbaiki
+            </button>
+          `;
+          alertListContainer.appendChild(div);
+        });
+      }
+
+      // Render Full Motors List with Part Health Cards
+      const fullMotorContainer = document.getElementById('garasiFullMotorList');
+      fullMotorContainer.innerHTML = '';
+
+      motors.forEach(m => {
+        const div = document.createElement('div');
+        div.id = `motor-card-${m.id}`;
+        div.className = 'bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3';
+        
+        // Header
+        let partsHTML = '';
+        partsConfig.forEach(p => {
+          if (p.targetType !== 'all' && p.targetType !== m.category) return;
+          const lastDate = partHealthStates[m.id]?.[p.id]?.lastChangedDate;
+          const health = calculatePartHealth(lastDate, p.intervalMonths);
+          
+          let colorClass = 'bg-emerald-500';
+          if (health.percentage <= 30) colorClass = 'bg-rose-500';
+          else if (health.percentage <= 60) colorClass = 'bg-amber-500';
+
+          partsHTML += `
+            <div class="bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50 space-y-1">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-200 font-semibold flex items-center gap-1"><span>${p.icon}</span> ${p.name}</span>
+                <span class="font-bold text-slate-300">${health.percentage}%</span>
+              </div>
+              <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                <div class="${colorClass} h-full transition-all" style="width: ${health.percentage}%"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-slate-400">
+                <span>Ganti: ${lastDate || '-'}</span>
+                <span>Target: ${p.intervalMonths} Bln</span>
+              </div>
+            </div>
+          `;
+        });
+
+        div.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div>
+              <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+                ${m.name} <span class="text-xs font-normal text-slate-400">(${m.plat || m.type})</span>
+              </h3>
+              <p class="text-xs text-slate-400">Servis Rutin Terakhir: <span class="text-brand-400 font-semibold">${m.lastRoutineDate || 'Belum ada'}</span></p>
+            </div>
+            <button onclick="exportICSModal('${m.name}', '${m.lastRoutineDate}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-2.5 py-1 rounded-lg border border-slate-700 flex items-center gap-1">
+              📅 Remind HP
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 gap-2 pt-1">
+            ${partsHTML}
+          </div>
+        `;
+        fullMotorContainer.appendChild(div);
+      });
+    }
+
+    // RIWAYAT LIST RENDERER
+    function renderRiwayatList() {
+      const container = document.getElementById('riwayatLogList');
+      const filterValue = document.getElementById('filterMotorLog').value;
+      container.innerHTML = '';
+
+      const filteredLogs = filterValue === 'ALL' ? serviceLogs : serviceLogs.filter(l => l.motorId === filterValue);
+
+      if (filteredLogs.length === 0) {
+        container.innerHTML = '<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center text-xs text-slate-400">Belum ada catatan servis yang tersimpan.</div>';
+        return;
+      }
+
+      filteredLogs.forEach(log => {
+        const motor = motors.find(m => m.id === log.motorId);
+        const total = log.biayaPart + log.biayaJasa;
+        const div = document.createElement('div');
+        div.className = 'bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2.5';
+        div.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div>
+              <span class="text-xs font-bold text-white">${motor ? motor.name : 'Motor'}</span>
+              <span class="ml-2 text-[10px] px-2 py-0.5 rounded font-bold ${log.tipe === 'insidental' ? 'bg-amber-500/20 text-amber-300' : 'bg-brand-500/20 text-brand-300'}">
+                ${log.tipe === 'insidental' ? '⚡ Insidental' : '🔄 Servis Rutin'}
+              </span>
+            </div>
+            <span class="text-xs font-mono text-slate-400">${log.tanggal}</span>
+          </div>
+          <div class="text-xs text-slate-300 space-y-1">
+            <p><strong>Bengkel:</strong> ${log.bengkel || '-'}</p>
+            <p><strong>Part Diganti:</strong> ${log.partsChanged && log.partsChanged.length > 0 ? log.partsChanged.join(', ') : '-'}</p>
+            ${log.merekPart ? `<p class="text-slate-400 text-[11px]"><strong>Detail Merek:</strong> ${log.merekPart}</p>` : ''}
+          </div>
+          <div class="flex items-center justify-between border-t border-slate-800 pt-2 text-xs">
+            <span class="text-slate-400">Total Biaya:</span>
+            <span class="font-extrabold text-emerald-400 text-sm">Rp ${total.toLocaleString('id-ID')}</span>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // SETTINGS PARTS LIST RENDERER (MANAGE SPAREPARTS FEATURE)
+    function renderPartsSettingsList() {
+      const container = document.getElementById('settingsPartsList');
+      container.innerHTML = '';
+
+      partsConfig.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'bg-slate-800/80 border border-slate-700/60 rounded-xl p-2.5 flex items-center justify-between text-xs';
+        div.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="text-base">${p.icon}</span>
+            <div>
+              <div class="font-bold text-white">${p.name}</div>
+              <div class="text-[10px] text-slate-400">Interval: <strong class="text-brand-400">${p.intervalMonths} Bulan</strong> (${p.targetType === 'all' ? 'Semua Motor' : p.targetType})</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="openModalEditPart('${p.id}')" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-1 rounded-lg text-[11px] font-semibold">
+              Edit
+            </button>
+            <button onclick="deleteCustomPart('${p.id}')" class="bg-rose-950/50 hover:bg-rose-900 text-rose-300 px-2 py-1 rounded-lg text-[11px] font-semibold">
+              Hapus
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // SELECT OPTIONS POPULATOR
+    function renderSelectOptions() {
+      const selectServisMotor = document.getElementById('inputServisMotorId');
+      const selectFilterMotor = document.getElementById('filterMotorLog');
+
+      selectServisMotor.innerHTML = '';
+      selectFilterMotor.innerHTML = '<option value="ALL">Semua Motor</option>';
+
+      motors.forEach(m => {
+        selectServisMotor.innerHTML += `<option value="${m.id}">${m.name} (${m.type})</option>`;
+        selectFilterMotor.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+      });
+
+      renderPartCheckboxesInForm();
+    }
+
+    // RENDER PART CHECKBOXES INSIDE CATAT SERVIS FORM
+    function renderPartCheckboxesInForm() {
+      const motorId = document.getElementById('inputServisMotorId').value;
+      const motor = motors.find(m => m.id === motorId);
+      const container = document.getElementById('formPartCheckboxes');
+      container.innerHTML = '';
+
+      if (!motor) return;
+
+      partsConfig.forEach(p => {
+        if (p.targetType !== 'all' && p.targetType !== motor.category) return;
+        const label = document.createElement('label');
+        label.className = 'flex items-center gap-1.5 bg-slate-800 p-1.5 rounded-lg border border-slate-700 cursor-pointer text-[11px] text-slate-300';
+        label.innerHTML = `
+          <input type="checkbox" value="${p.id}" class="part-checkbox text-brand-500 rounded">
+          <span>${p.icon} ${p.name}</span>
+        `;
+        container.appendChild(label);
+      });
+    }
+
+    // QUICK REPAIR FROM ALERT CENTER
+    function quickRepairPart(motorId, partId) {
+      document.getElementById('inputServisMotorId').value = motorId;
+      renderPartCheckboxesInForm();
+
+      // Check the specific part
+      setTimeout(() => {
+        const checkboxes = document.querySelectorAll('.part-checkbox');
+        checkboxes.forEach(cb => {
+          if (cb.value === partId) cb.checked = true;
+        });
+      }, 50);
+
+      openModalCatatServis();
+    }
+
+    // HANDLER: SAVE SERVIS (AUTO DISAPPEAR ALERT BY RESETTING PART LAST DATE)
+    function handleSaveServis(e) {
+      e.preventDefault();
+
+      const motorId = document.getElementById('inputServisMotorId').value;
+      const tipe = document.querySelector('input[name="tipeServis"]:checked').value;
+      const tanggal = document.getElementById('inputServisTanggal').value;
+      const bengkel = document.getElementById('inputServisBengkel').value;
+      const merekPart = document.getElementById('inputServisMerekPart').value;
+      const biayaPart = parseFloat(document.getElementById('inputServisBiayaPart').value) || 0;
+      const biayaJasa = parseFloat(document.getElementById('inputServisBiayaJasa').value) || 0;
+
+      const checkedPartEls = document.querySelectorAll('.part-checkbox:checked');
+      const partsChangedIds = Array.from(checkedPartEls).map(el => el.value);
+      const partsChangedNames = partsChangedIds.map(id => {
+        const p = partsConfig.find(item => item.id === id);
+        return p ? p.name : id;
+      });
+
+      // Update part health state for selected parts
+      if (!partHealthStates[motorId]) partHealthStates[motorId] = {};
+      partsChangedIds.forEach(id => {
+        partHealthStates[motorId][id] = { lastChangedDate: tanggal };
+      });
+
+      // If Rutin, update motor's last routine date
+      if (tipe === 'rutin') {
+        const motor = motors.find(m => m.id === motorId);
+        if (motor) motor.lastRoutineDate = tanggal;
+      }
+
+      // Add to logs
+      const logData = {
+        id: 'log_' + Date.now(),
+        motorId,
+        tipe,
+        tanggal,
+        bengkel,
+        merekPart,
+        partsChanged: partsChangedNames,
+        biayaPart,
+        biayaJasa
+      };
+      serviceLogs.unshift(logData);
+
+      saveToLocalStorage();
+      closeModalCatatServis();
+      renderAllViews();
+    }
+
+    // HANDLER: SAVE CUSTOM PART (SETTINGS)
+    function handleSavePart(e) {
+      e.preventDefault();
+      const id = document.getElementById('inputPartId').value || 'part_' + Date.now();
+      const name = document.getElementById('inputPartName').value;
+      const intervalMonths = parseInt(document.getElementById('inputPartIntervalMonths').value) || 6;
+      const icon = document.getElementById('inputPartIcon').value || '🔧';
+      const targetType = document.getElementById('inputPartTargetType').value;
+
+      const existingIdx = partsConfig.findIndex(p => p.id === id);
+      if (existingIdx >= 0) {
+        partsConfig[existingIdx] = { ...partsConfig[existingIdx], name, intervalMonths, icon, targetType };
+      } else {
+        partsConfig.push({ id, name, intervalMonths, category: 'Kustom', targetType, icon, approxCost: 50000 });
+      }
+
+      saveToLocalStorage();
+      closeModalAddPart();
+      renderAllViews();
+    }
+
+    function openModalEditPart(id) {
+      const part = partsConfig.find(p => p.id === id);
+      if (!part) return;
+      document.getElementById('inputPartId').value = part.id;
+      document.getElementById('inputPartName').value = part.name;
+      document.getElementById('inputPartIntervalMonths').value = part.intervalMonths;
+      document.getElementById('inputPartIcon').value = part.icon;
+      document.getElementById('inputPartTargetType').value = part.targetType;
+      openModalAddPart();
+    }
+
+    function deleteCustomPart(id) {
+      if (confirm('Hapus part ini dari daftar pengawasan?')) {
+        partsConfig = partsConfig.filter(p => p.id !== id);
+        saveToLocalStorage();
+        renderAllViews();
+      }
+    }
+
+    function resetPartsToDefault() {
+      if (confirm('Kembalikan semua part ke rekomendasi interval pabrikan awal?')) {
+        partsConfig = [...DEFAULT_PARTS_LIST];
+        saveToLocalStorage();
+        renderAllViews();
+      }
+    }
+
+    // HANDLER: SAVE NEW MOTOR
+    function handleSaveMotor(e) {
+      e.preventDefault();
+      const name = document.getElementById('inputMotorNama').value;
+      const type = document.getElementById('inputMotorTipe').value;
+      const category = document.getElementById('inputMotorKategori').value;
+      const plat = document.getElementById('inputMotorPlat').value;
+
+      const colors = ['from-blue-600 to-indigo-700', 'from-rose-600 to-red-700', 'from-amber-500 to-orange-600', 'from-emerald-600 to-teal-700', 'from-purple-600 to-indigo-800'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+      const newMotor = {
+        id: 'm_' + Date.now(),
+        name,
+        type,
+        category,
+        plat,
+        color: randomColor,
+        lastRoutineDate: new Date().toISOString().split('T')[0]
+      };
+
+      motors.push(newMotor);
+      saveToLocalStorage();
+      closeModalAddMotor();
+      renderAllViews();
+    }
+
+    // CALENDAR EXPORT (.ICS FILE)
+    function exportICSModal(motorName, lastDateStr) {
+      const date = lastDateStr ? new Date(lastDateStr) : new Date();
+      date.setMonth(date.getMonth() + 2); // default 2 months reminder
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+
+      const icsData = 
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//MotoCare Pro//NMAX Servis//ID
+BEGIN:VEVENT
+SUMMARY:🚨 Jadwal Servis Rutin ${motorName}
+DESCRIPTION:Pengingat otomatis dari MotoCare Pro: Waktunya servis rutin & ganti oli untuk ${motorName}.
+DTSTART:${year}${month}${day}T090000Z
+DTEND:${year}${month}${day}T100000Z
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Pengingat Servis Motor H-3
+TRIGGER:-P3D
+END:VALARM
+END:VEVENT
+END:VCALENDAR`;
+
+      const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', `Servis_${motorName.replace(/\s+/g, '_')}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // EXPORT & IMPORT JSON
+    function exportJSON() {
+      const data = { motors, partsConfig, partHealthStates, serviceLogs };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `MotoCare_Backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importJSON(e) {
+      const fileReader = new FileReader();
+      fileReader.onload = function (event) {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (parsed.motors) motors = parsed.motors;
+          if (parsed.partsConfig) partsConfig = parsed.partsConfig;
+          if (parsed.partHealthStates) partHealthStates = parsed.partHealthStates;
+          if (parsed.serviceLogs) serviceLogs = parsed.serviceLogs;
+          saveToLocalStorage();
+          renderAllViews();
+          alert('Data berhasil di-import!');
+        } catch (err) {
+          alert('Format file JSON tidak valid!');
+        }
+      };
+      fileReader.readAsText(e.target.files[0]);
+    }
+
+    // EXECUTE FACTORY RESET
+    function executeFactoryReset() {
+      localStorage.clear();
+      motors = DEFAULT_MOTORS;
+      partsConfig = DEFAULT_PARTS_LIST;
+      partHealthStates = {};
+      serviceLogs = [];
+      initData();
+      closeModalResetConfirm();
+      renderAllViews();
+    }
+
+    // NAVIGATION SYSTEM
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-brand-400');
+        btn.classList.add('text-slate-400');
+      });
+      const activeNav = document.getElementById(`nav-${tabId}`);
+      if (activeNav) {
+        activeNav.classList.remove('text-slate-400');
+        activeNav.classList.add('text-brand-400');
+      }
+
+      if (tabId === 'analisis') renderChartBiaya();
+    }
+
+    function navToGarasiAlerts() {
+      switchTab('garasi');
+      const alertElem = document.getElementById('alertCenterGarasi');
+      if (alertElem) alertElem.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function navToGarasiMotor(motorId) {
+      switchTab('garasi');
+      const elem = document.getElementById(`motor-card-${motorId}`);
+      if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // MODAL CONTROL HELPERS
+    function openModalCatatServis() { document.getElementById('modalCatatServis').classList.remove('hidden'); }
+    function closeModalCatatServis() { document.getElementById('modalCatatServis').classList.add('hidden'); }
+    
+    function openModalAddPart() { document.getElementById('modalAddPart').classList.remove('hidden'); }
+    function closeModalAddPart() { 
+      document.getElementById('modalAddPart').classList.add('hidden'); 
+      document.getElementById('inputPartId').value = '';
+      document.getElementById('formAddPart').reset();
+    }
+
+    function openModalAddMotor() { document.getElementById('modalAddMotor').classList.remove('hidden'); }
+    function closeModalAddMotor() { document.getElementById('modalAddMotor').classList.add('hidden'); }
+
+    function openModalResetConfirm() { document.getElementById('modalResetConfirm').classList.remove('hidden'); }
+    function closeModalResetConfirm() { document.getElementById('modalResetConfirm').classList.add('hidden'); }
+
+    // RENDER CHART COST ANALYTICS
+    function renderChartBiaya() {
+      const ctx = document.getElementById('chartBiayaMotor').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      const labels = motors.map(m => m.name);
+      const dataTotals = motors.map(m => {
+        return serviceLogs
+          .filter(l => l.motorId === m.id)
+          .reduce((sum, l) => sum + (l.biayaPart + l.biayaJasa), 0);
+      });
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Total Pengeluaran (Rp)',
+            data: dataTotals,
+            backgroundColor: ['#3b82f6', '#f43f5e', '#f59e0b', '#10b981', '#8b5cf6'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+            x: { ticks: { color: '#f8fafc', font: { size: 11, weight: 'bold' } }, grid: { display: false } }
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html>
