@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>MotoCare Pro - Modern Android Edition</title>
+  <title>MotoCare Pro - Focused Android Edition</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <!-- Google Fonts: Plus Jakarta Sans -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
@@ -29,11 +29,10 @@
   </script>
   <style>
     body { background-color: #090d16; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-    .bottom-nav { background: rgba(19, 27, 46, 0.92); backdrop-filter: blur(16px); border-top: 1px solid rgba(255, 255, 255, 0.08); }
-    .glass-card { background: rgba(19, 27, 46, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.07); }
+    .bottom-nav { background: rgba(19, 27, 46, 0.94); backdrop-filter: blur(16px); border-top: 1px solid rgba(255, 255, 255, 0.08); }
+    .glass-card { background: rgba(19, 27, 46, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
     .part-card-interactive { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
     .part-card-interactive:active { transform: scale(0.97); background-color: #1e2942; }
-    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: #090d16; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -42,7 +41,7 @@
 <body class="pb-28 antialiased selection:bg-brand-500 selection:text-white">
 
   <!-- TOP APP BAR / HEADER -->
-  <header class="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/80 px-4 py-3">
+  <header class="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 px-4 py-3">
     <div class="max-w-md mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-cyan-400 flex items-center justify-center font-black text-white shadow-lg shadow-brand-500/25 text-xl tracking-tighter">
@@ -52,7 +51,7 @@
           <h1 class="text-base font-extrabold leading-tight text-white flex items-center gap-1.5">
             MotoCare <span class="bg-gradient-to-r from-brand-400 to-indigo-400 bg-clip-text text-transparent font-black">PRO</span>
           </h1>
-          <p class="text-[11px] text-slate-400 font-medium">Asisten Perawatan 4 Motor</p>
+          <p class="text-[11px] text-slate-400 font-medium">Asisten Servis Motor</p>
         </div>
       </div>
 
@@ -67,7 +66,7 @@
     </div>
   </header>
 
-  <!-- MAIN APP CONTAINER (MOBILE MAX-WIDTH) -->
+  <!-- MAIN CONTAINER -->
   <main class="max-w-md mx-auto px-4 pt-4 space-y-5">
 
     <!-- TAB 1: DASHBOARD -->
@@ -80,7 +79,7 @@
           <span class="text-[11px] font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
             <span>💡</span> Perkiraan Budget Servis (30 Hari)
           </span>
-          <span class="text-[10px] bg-indigo-500/20 text-indigo-300 font-bold px-2 py-0.5 rounded-full">Otomatis Usia Part</span>
+          <span class="text-[10px] bg-indigo-500/20 text-indigo-300 font-bold px-2 py-0.5 rounded-full">Usia Durasi</span>
         </div>
         <div class="flex items-baseline justify-between pt-1">
           <div>
@@ -96,7 +95,7 @@
       <!-- RINGKASAN GARASI CEPAT -->
       <div>
         <div class="flex items-center justify-between mb-3 px-1">
-          <h2 class="text-sm font-extrabold text-slate-200 uppercase tracking-wider text-[11px]">Status Ringkas Garasi</h2>
+          <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Garasi Ringkas</h2>
           <button onclick="switchTab('garasi')" class="text-xs text-brand-400 font-bold hover:underline">Kelola Garasi &rarr;</button>
         </div>
         <div id="dashboardMotorCards" class="grid grid-cols-2 gap-3">
@@ -116,7 +115,7 @@
       </div>
     </section>
 
-    <!-- TAB 2: GARASI & ALERT CENTER (INTERAKTIF FULL) -->
+    <!-- TAB 2: GARASI (FOKUS 1 MOTOR SAJA) -->
     <section id="tab-garasi" class="tab-content hidden space-y-4">
       
       <!-- PUSAT ALERT TERPUSAT -->
@@ -134,20 +133,22 @@
         </div>
       </div>
 
-      <!-- DAFTAR MOTOR FULL & PART INTERAKTIF -->
+      <!-- TAB PILLS SELEKTOR MOTOR (HANYA MUNCUL 1 MOTOR SAJA) -->
       <div class="space-y-3">
         <div class="flex items-center justify-between px-1">
-          <div>
-            <h2 class="text-sm font-extrabold text-slate-200">Garasi Sepeda Motor</h2>
-            <p class="text-[11px] text-brand-400 font-medium">💡 Tap pada kartu part untuk langsung ganti!</p>
-          </div>
-          <button onclick="openModalAddMotor()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold px-3 py-2 rounded-2xl shadow-lg shadow-brand-500/30 flex items-center gap-1 transition-all active:scale-95">
+          <h2 class="text-sm font-extrabold text-slate-200">Garasi Motor Saya</h2>
+          <button onclick="openModalAddMotor()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow flex items-center gap-1 transition-all active:scale-95">
             <span>+</span> Motor
           </button>
         </div>
-        
-        <!-- CONTAINER UNTUK TIAP KARTU MOTOR & SPAREPARTNYA -->
-        <div id="garasiFullMotorList" class="space-y-4">
+
+        <!-- HORIZONTAL MOTOR SELECTOR TABS -->
+        <div id="garasiMotorTabs" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <!-- Rendered via JS -->
+        </div>
+
+        <!-- TAMPILAN SINGLE MOTOR TERPILIH -->
+        <div id="garasiSingleMotorView" class="space-y-4">
           <!-- Rendered via JS -->
         </div>
       </div>
@@ -187,29 +188,45 @@
       </div>
     </section>
 
-    <!-- TAB 5: PENGATURAN & KELOLA PART -->
+    <!-- TAB 5: PENGATURAN & KELOLA PART (DIPISAH RUTIN & SATUAN) -->
     <section id="tab-pengaturan" class="tab-content hidden space-y-4">
       
-      <!-- KELOLA SPAREPART & INTERVAL BULAN -->
-      <div class="glass-card rounded-3xl p-4 space-y-3">
-        <div class="flex items-center justify-between">
+      <!-- KELOLA SPAREPART: RUTIN & SATUAN -->
+      <div class="glass-card rounded-3xl p-4 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
             <h2 class="text-sm font-extrabold text-white flex items-center gap-1.5">
               <span>🛠️</span> Kelola Sparepart & Interval
             </h2>
-            <p class="text-xs text-slate-400 mt-0.5">Atur target interval bulan pemakaian part.</p>
+            <p class="text-xs text-slate-400 mt-0.5">Kelola daftar sparepart rutin & satuan.</p>
           </div>
           <button onclick="openModalAddPart()" class="bg-brand-600/80 hover:bg-brand-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all">
             + Part
           </button>
         </div>
 
-        <div id="settingsPartsList" class="space-y-2 pt-1">
-          <!-- Rendered via JS -->
+        <!-- KELOMPOK 1: SERVIS RUTIN -->
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold text-brand-400 uppercase tracking-wider flex items-center gap-1">
+            <span>🔄</span> Kelompok Servis Rutin
+          </h3>
+          <div id="settingsPartsRutinList" class="space-y-2">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- KELOMPOK 2: SERVIS SATUAN / INSIDENTAL -->
+        <div class="space-y-2 pt-2 border-t border-slate-800">
+          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+            <span>⚡</span> Kelompok Servis Satuan (Insidental)
+          </h3>
+          <div id="settingsPartsSatuanList" class="space-y-2">
+            <!-- Rendered via JS -->
+          </div>
         </div>
 
         <button onclick="resetPartsToDefault()" class="w-full text-center text-xs text-slate-400 hover:text-slate-200 py-2 border border-dashed border-slate-800 rounded-xl font-medium">
-          🔄 Kembalikan Interval ke Standar Pabrikan
+          🔄 Kembalikan Part ke Standar Bawaan
         </button>
       </div>
 
@@ -227,13 +244,13 @@
         </div>
       </div>
 
-      <!-- FACTORY RESET -->
+      <!-- FACTORY RESET BERSIH -->
       <div class="bg-rose-950/25 border border-rose-900/40 rounded-3xl p-4 space-y-2.5">
         <h2 class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
           <span>⚠️</span> Factory Reset (Mulai Dari Nol)
         </h2>
         <p class="text-xs text-slate-400 leading-relaxed">
-          Hapus seluruh data garasi dan catatan servis untuk menginput motor dari awal secara bersih.
+          Hapus seluruh data garasi, riwayat servis, dan pengaturan kelola sparepart untuk menginput dari awal secara bersih.
         </p>
         <button onclick="openModalResetConfirm()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-3 rounded-2xl shadow-lg transition-all active:scale-95">
           🔥 Reset Total Semua Data
@@ -276,7 +293,7 @@
     </div>
   </nav>
 
-  <!-- MODAL: CATAT SERVIS / PERBAIKAN (BOTTOM SHEET) -->
+  <!-- MODAL: CATAT SERVIS / PERBAIKAN -->
   <div id="modalCatatServis" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden flex items-end justify-center">
     <div class="bg-android-card border-t border-slate-700/80 w-full max-w-md rounded-t-3xl max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl">
       <div class="w-12 h-1 bg-slate-600 rounded-full mx-auto mb-1 opacity-60"></div>
@@ -296,22 +313,22 @@
           </select>
         </div>
 
-        <!-- TIPE CATATAN -->
+        <!-- TIPE CATATAN (RUTIN VS SATUAN) -->
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">Tipe Catatan</label>
           <div class="grid grid-cols-2 gap-2">
             <label class="bg-slate-900 border border-slate-700/80 rounded-2xl p-3 flex items-center gap-2.5 cursor-pointer has-[:checked]:border-brand-500 has-[:checked]:bg-brand-500/10 transition-all">
-              <input type="radio" name="tipeServis" value="rutin" checked class="text-brand-500 focus:ring-0">
+              <input type="radio" name="tipeServis" value="rutin" checked onchange="renderPartCheckboxesInForm()" class="text-brand-500 focus:ring-0">
               <div>
                 <div class="text-xs font-bold text-slate-100">🔄 Servis Rutin</div>
-                <div class="text-[10px] text-slate-400">Update tanggal rutin</div>
+                <div class="text-[10px] text-slate-400">Oli & Servis CVT</div>
               </div>
             </label>
             <label class="bg-slate-900 border border-slate-700/80 rounded-2xl p-3 flex items-center gap-2.5 cursor-pointer has-[:checked]:border-amber-500 has-[:checked]:bg-amber-500/10 transition-all">
-              <input type="radio" name="tipeServis" value="insidental" class="text-amber-500 focus:ring-0">
+              <input type="radio" name="tipeServis" value="insidental" onchange="renderPartCheckboxesInForm()" class="text-amber-500 focus:ring-0">
               <div>
-                <div class="text-xs font-bold text-slate-100">⚡ Insidental</div>
-                <div class="text-[10px] text-slate-400">Part rusak/putus</div>
+                <div class="text-xs font-bold text-slate-100">⚡ Servis Satuan</div>
+                <div class="text-[10px] text-slate-400">Ban, Aki, Rem, V-Belt</div>
               </div>
             </label>
           </div>
@@ -331,16 +348,37 @@
 
         <!-- CHECKLIST SPAREPART TERGANTI -->
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">Sparepart yang Diganti / Direset</label>
-          <div id="formPartCheckboxes" class="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto p-2.5 bg-slate-900/90 rounded-2xl border border-slate-700/80 text-xs">
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Pilih Sparepart yang Diganti</label>
+          <div id="formPartCheckboxes" class="grid grid-cols-1 gap-2 max-h-52 overflow-y-auto p-2.5 bg-slate-900/90 rounded-2xl border border-slate-700/80 text-xs">
             <!-- Rendered via JS -->
           </div>
         </div>
 
+        <!-- OPSI TAMBAHAN PERTANYAAN (POSISI BAN/REM & NOTE CVT) -->
+        <div id="extraOptionsContainer" class="space-y-3 hidden bg-slate-900/60 p-3 rounded-2xl border border-slate-800">
+          
+          <!-- OPSI POSISI (BAN / KAMPAS REM) -->
+          <div id="optionPosisiContainer" class="hidden space-y-1">
+            <label class="block text-[11px] font-bold text-amber-300">Bagian Mana yang Diganti? (Ban / Rem)</label>
+            <select id="inputServisPosisi" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs font-semibold">
+              <option value="Depan & Belakang">Depan & Belakang (1 Set)</option>
+              <option value="Depan Saja">Depan Saja</option>
+              <option value="Belakang Saja">Belakang Saja</option>
+            </select>
+          </div>
+
+          <!-- OPSI RINCIAN SERVIS CVT -->
+          <div id="optionCvtNoteContainer" class="hidden space-y-1">
+            <label class="block text-[11px] font-bold text-brand-300">Rincian Perbaikan CVT (Opsional Note)</label>
+            <input type="text" id="inputServisCvtNote" placeholder="Misal: Greasing, Ganti Roller 10g, Bersihkan Mangkok" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs">
+          </div>
+
+        </div>
+
         <!-- DETAIL MEREK PART -->
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Merek Part / Catatan (Opsional)</label>
-          <input type="text" id="inputServisMerekPart" placeholder="Misal: Oli Yamalube 10W-40, V-Belt Gates" class="w-full bg-slate-900 border border-slate-700 text-white rounded-2xl px-3.5 py-2.5 text-xs">
+          <label class="block text-xs font-bold text-slate-300 mb-1">Merek Part / Catatan Tambahan</label>
+          <input type="text" id="inputServisMerekPart" placeholder="Misal: Shell Advance, Ban FDR, Aki Yuasa" class="w-full bg-slate-900 border border-slate-700 text-white rounded-2xl px-3.5 py-2.5 text-xs">
         </div>
 
         <!-- BIAYA PART & JASA -->
@@ -375,27 +413,36 @@
         
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1">Nama Sparepart</label>
-          <input type="text" id="inputPartName" placeholder="Misal: Lampu Utama, Filter Oli" class="w-full bg-slate-900 border border-slate-700 text-white rounded-2xl px-3 py-2.5 text-xs" required>
+          <input type="text" id="inputPartName" placeholder="Misal: Lampu Depan, Air Radiator" class="w-full bg-slate-900 border border-slate-700 text-white rounded-2xl px-3 py-2.5 text-xs" required>
         </div>
 
         <div class="grid grid-cols-2 gap-2.5">
           <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Kelompok Servis</label>
+            <select id="inputPartGroup" class="w-full bg-slate-900 border border-slate-700 text-white rounded-2xl px-3 py-2.5 text-xs font-semibold">
+              <option value="rutin">🔄 Servis Rutin</option>
+              <option value="satuan">⚡ Servis Satuan</option>
+            </select>
+          </div>
+          <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">Interval (Bulan)</label>
             <input type="number" inputmode="numeric" id="inputPartIntervalMonths" min="1" placeholder="6" class="w-full bg-slate-900 border border-slate-700 text-white rounded-2xl px-3 py-2.5 text-xs font-bold" required>
           </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">Emoji / Ikon</label>
             <input type="text" id="inputPartIcon" placeholder="💡" class="w-full bg-slate-900 border border-slate-700 text-white rounded-2xl px-3 py-2.5 text-xs" required>
           </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Jenis Motor Target</label>
-          <select id="inputPartTargetType" class="w-full bg-slate-900 border border-slate-700 text-white rounded-2xl px-3 py-2.5 text-xs font-semibold">
-            <option value="all">Semua Jenis Motor</option>
-            <option value="matic">Khusus Matic (CVT)</option>
-            <option value="bebek">Khusus Bebek (Rantai)</option>
-          </select>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Jenis Motor</label>
+            <select id="inputPartTargetType" class="w-full bg-slate-900 border border-slate-700 text-white rounded-2xl px-3 py-2.5 text-xs font-semibold">
+              <option value="all">Semua Motor</option>
+              <option value="matic">Khusus Matic</option>
+              <option value="bebek">Khusus Bebek</option>
+            </select>
+          </div>
         </div>
 
         <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3.5 rounded-2xl shadow-lg transition-all text-xs">
@@ -453,7 +500,7 @@
       </div>
       <div>
         <h3 class="text-base font-extrabold text-white">Reset Total Semua Data?</h3>
-        <p class="text-xs text-slate-400 mt-1">Seluruh data garasi & riwayat servis akan terhapus secara permanen.</p>
+        <p class="text-xs text-slate-400 mt-1">Seluruh garasi, catatan servis, dan kelola part akan dihapus bersih ke kondisi awal.</p>
       </div>
       <div class="flex gap-2">
         <button onclick="closeModalResetConfirm()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-2xl text-xs">
@@ -468,19 +515,18 @@
 
   <!-- JAVASCRIPT LOGIC ENGINE -->
   <script>
-    // DEFAULT TIME-BASED SPAREPARTS INTERVAL (MONTHS)
+    // DEFINE DEFAULT PARTS LIST (STRICTLY RUTIN VS SATUAN)
     const DEFAULT_PARTS_LIST = [
-      { id: 'oli_mesin', name: 'Oli Mesin', intervalMonths: 2, category: 'Mesin', targetType: 'all', icon: '🛢️', approxCost: 65000 },
-      { id: 'oli_gardan', name: 'Oli Gardan / Transmisi', intervalMonths: 6, category: 'Transmisi', targetType: 'matic', icon: '⚙️', approxCost: 25000 },
-      { id: 'busi', name: 'Busi Engine', intervalMonths: 6, category: 'Pengapian', targetType: 'all', icon: '🔌', approxCost: 35000 },
-      { id: 'filter_udara', name: 'Filter Udara', intervalMonths: 12, category: 'Mesin', targetType: 'all', icon: '🌪️', approxCost: 55000 },
-      { id: 'coolant', name: 'Air Radiator / Coolant', intervalMonths: 12, category: 'Pendingin', targetType: 'all', icon: '💧', approxCost: 40000 },
-      { id: 'vbelt', name: 'V-Belt & Roller CVT', intervalMonths: 18, category: 'Transmisi', targetType: 'matic', icon: '⛓️', approxCost: 185000 },
-      { id: 'rantai', name: 'Rantai & Gear Set', intervalMonths: 18, category: 'Transmisi', targetType: 'bebek', icon: '⚙️', approxCost: 175000 },
-      { id: 'kampas_rem', name: 'Kampas Rem (Depan/Blk)', intervalMonths: 12, category: 'Pengereman', targetType: 'all', icon: '🛑', approxCost: 75000 },
-      { id: 'minyak_rem', name: 'Minyak Rem', intervalMonths: 24, category: 'Pengereman', targetType: 'all', icon: '🛢️', approxCost: 25000 },
-      { id: 'aki', name: 'Aki / Battery', intervalMonths: 18, category: 'Kelistrikan', targetType: 'all', icon: '🔋', approxCost: 240000 },
-      { id: 'ban', name: 'Ban (Depan / Belakang)', intervalMonths: 24, category: 'Kaki-kaki', targetType: 'all', icon: '🛞', approxCost: 320000 }
+      // KELOMPOK RUTIN
+      { id: 'oli_mesin', name: 'Oli Mesin', group: 'rutin', intervalMonths: 2, category: 'Mesin', targetType: 'all', icon: '🛢️', approxCost: 65000 },
+      { id: 'oli_gardan', name: 'Oli Gardan', group: 'rutin', intervalMonths: 6, category: 'Transmisi', targetType: 'matic', icon: '⚙️', approxCost: 25000 },
+      { id: 'servis_cvt', name: 'Servis CVT', group: 'rutin', intervalMonths: 6, category: 'Transmisi', targetType: 'matic', icon: '🛠️', approxCost: 85000, hasNotes: true },
+      
+      // KELOMPOK SATUAN (INSIDENTAL)
+      { id: 'ban', name: 'Ban', group: 'satuan', intervalMonths: 24, category: 'Kaki-kaki', targetType: 'all', icon: '🛞', approxCost: 250000, hasPosisi: true },
+      { id: 'vbelt', name: 'V-Belt', group: 'satuan', intervalMonths: 18, category: 'Transmisi', targetType: 'matic', icon: '⛓️', approxCost: 175000 },
+      { id: 'aki', name: 'Aki', group: 'satuan', intervalMonths: 18, category: 'Kelistrikan', targetType: 'all', icon: '🔋', approxCost: 230000 },
+      { id: 'kampas_rem', name: 'Kampas Rem', group: 'satuan', intervalMonths: 12, category: 'Pengereman', targetType: 'all', icon: '🛑', approxCost: 65000, hasPosisi: true }
     ];
 
     // DEFAULT MOTORS PRESET
@@ -496,6 +542,7 @@
     let partsConfig = [];
     let partHealthStates = {}; 
     let serviceLogs = [];
+    let selectedGarasiMotorId = null;
     let chartInstance = null;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -514,6 +561,10 @@
       partsConfig = storedParts ? JSON.parse(storedParts) : DEFAULT_PARTS_LIST;
       partHealthStates = storedStates ? JSON.parse(storedStates) : {};
       serviceLogs = storedLogs ? JSON.parse(storedLogs) : [];
+
+      if (motors.length > 0 && !selectedGarasiMotorId) {
+        selectedGarasiMotorId = motors[0].id;
+      }
 
       motors.forEach(m => {
         if (!partHealthStates[m.id]) partHealthStates[m.id] = {};
@@ -597,7 +648,7 @@
           </div>
           <div class="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px]">
             <span class="text-white/70 font-mono text-[10px]">${m.plat || '-'}</span>
-            <span class="font-bold underline text-white text-[10px]">Detail &rarr;</span>
+            <span class="font-bold underline text-white text-[10px]">Lihat &rarr;</span>
           </div>
         `;
         container.appendChild(card);
@@ -621,7 +672,7 @@
           div.className = 'flex items-center justify-between text-xs py-2 border-b border-slate-800/60 last:border-0';
           div.innerHTML = `
             <div>
-              <div class="font-bold text-slate-200">${motor ? motor.name : 'Motor'} • <span class="text-brand-400 font-semibold">${log.tipe === 'insidental' ? '⚡ Insidental' : '🔄 Rutin'}</span></div>
+              <div class="font-bold text-slate-200">${motor ? motor.name : 'Motor'} • <span class="text-brand-400 font-semibold">${log.tipe === 'insidental' ? '⚡ Satuan' : '🔄 Rutin'}</span></div>
               <div class="text-[10px] text-slate-400 mt-0.5">${log.tanggal} • ${log.bengkel || 'Bengkel'}</div>
             </div>
             <div class="font-extrabold text-emerald-400">Rp ${(log.biayaPart + log.biayaJasa).toLocaleString('id-ID')}</div>
@@ -631,8 +682,9 @@
       }
     }
 
-    // RENDER GARASI WITH FULLY INTERACTIVE PART CARDS
+    // RENDER GARASI WITH SINGLE MOTOR SELECTION
     function renderGarasiAlerts() {
+      // 1. Alert Center List
       const alertListContainer = document.getElementById('alertCenterList');
       alertListContainer.innerHTML = '';
 
@@ -649,7 +701,7 @@
       if (activeAlerts.length === 0) {
         alertListContainer.innerHTML = `
           <div class="bg-emerald-950/20 border border-emerald-800/30 rounded-2xl p-3 text-center text-xs text-emerald-300 font-medium">
-            🎉 Semua sparepart 4 motor dalam kondisi sehat!
+            🎉 Semua sparepart motor dalam kondisi sehat!
           </div>
         `;
       } else {
@@ -672,73 +724,113 @@
         });
       }
 
-      // RENDER MOTOR CARDS AND INTERACTIVE SPAREPART CARDS
-      const fullMotorContainer = document.getElementById('garasiFullMotorList');
-      fullMotorContainer.innerHTML = '';
+      // 2. Render Garasi Motor Selection Tabs
+      const tabsContainer = document.getElementById('garasiMotorTabs');
+      tabsContainer.innerHTML = '';
+
+      if (motors.length === 0) {
+        document.getElementById('garasiSingleMotorView').innerHTML = '<div class="glass-card rounded-3xl p-6 text-center text-xs text-slate-400">Garasi Anda kosong. Silakan tambah motor baru.</div>';
+        return;
+      }
+
+      if (!selectedGarasiMotorId || !motors.find(m => m.id === selectedGarasiMotorId)) {
+        selectedGarasiMotorId = motors[0].id;
+      }
 
       motors.forEach(m => {
-        const div = document.createElement('div');
-        div.id = `motor-card-${m.id}`;
-        div.className = 'glass-card rounded-3xl p-4 space-y-3 shadow-lg border border-slate-800/80';
+        const isSelected = m.id === selectedGarasiMotorId;
+        const btn = document.createElement('button');
+        btn.onclick = () => {
+          selectedGarasiMotorId = m.id;
+          renderGarasiAlerts();
+        };
+        btn.className = `px-4 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition-all border ${
+          isSelected 
+            ? 'bg-brand-600 border-brand-500 text-white shadow-lg shadow-brand-500/30' 
+            : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+        }`;
+        btn.innerText = `${m.name} (${m.type.split(' ')[0]})`;
+        tabsContainer.appendChild(btn);
+      });
+
+      // 3. Render Only Selected Motor View
+      const singleContainer = document.getElementById('garasiSingleMotorView');
+      singleContainer.innerHTML = '';
+
+      const m = motors.find(item => item.id === selectedGarasiMotorId);
+      if (!m) return;
+
+      const div = document.createElement('div');
+      div.className = 'glass-card rounded-3xl p-4 space-y-4 shadow-xl border border-slate-800';
+
+      let partsRutinHTML = '';
+      let partsSatuanHTML = '';
+
+      partsConfig.forEach(p => {
+        if (p.targetType !== 'all' && p.targetType !== m.category) return;
+        const lastDate = partHealthStates[m.id]?.[p.id]?.lastChangedDate;
+        const health = calculatePartHealth(lastDate, p.intervalMonths);
         
-        let partsHTML = '';
-        partsConfig.forEach(p => {
-          if (p.targetType !== 'all' && p.targetType !== m.category) return;
-          const lastDate = partHealthStates[m.id]?.[p.id]?.lastChangedDate;
-          const health = calculatePartHealth(lastDate, p.intervalMonths);
-          
-          let colorClass = 'bg-emerald-500';
-          let borderClass = 'border-slate-800/80';
-          if (health.percentage <= 30) {
-            colorClass = 'bg-rose-500';
-            borderClass = 'border-rose-500/40 bg-rose-950/20';
-          } else if (health.percentage <= 60) {
-            colorClass = 'bg-amber-500';
-            borderClass = 'border-amber-500/30 bg-amber-950/10';
-          }
+        let colorClass = 'bg-emerald-500';
+        let borderClass = 'border-slate-800/80';
+        if (health.percentage <= 30) {
+          colorClass = 'bg-rose-500';
+          borderClass = 'border-rose-500/40 bg-rose-950/20';
+        } else if (health.percentage <= 60) {
+          colorClass = 'bg-amber-500';
+          borderClass = 'border-amber-500/30 bg-amber-950/10';
+        }
 
-          // FITUR KUNCI: TIAP SPAREPART BISA LANGSUNG DITAP UNTUK DIGANTI!
-          partsHTML += `
-            <div onclick="quickRepairPart('${m.id}', '${p.id}')" class="part-card-interactive bg-slate-900/90 rounded-2xl p-3 border ${borderClass} space-y-2 cursor-pointer group hover:border-brand-500/60 shadow-md">
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-slate-100 font-bold flex items-center gap-1.5 group-hover:text-brand-400 transition-colors">
-                  <span class="text-sm">${p.icon}</span> ${p.name}
-                </span>
-                <div class="flex items-center gap-1.5">
-                  <span class="font-black text-xs ${health.percentage <= 30 ? 'text-rose-400' : 'text-slate-200'}">${health.percentage}%</span>
-                  <span class="text-[10px] bg-brand-500/20 text-brand-300 font-bold px-2 py-0.5 rounded-lg group-hover:bg-brand-500 group-hover:text-white transition-all">🛠️ Tap Ganti</span>
-                </div>
-              </div>
-              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5">
-                <div class="${colorClass} h-full rounded-full transition-all" style="width: ${health.percentage}%"></div>
-              </div>
-              <div class="flex justify-between text-[10px] text-slate-400 font-medium">
-                <span>Terakhir: ${lastDate || '-'}</span>
-                <span>Interval: ${p.intervalMonths} Bulan</span>
+        const itemHTML = `
+          <div onclick="quickRepairPart('${m.id}', '${p.id}')" class="part-card-interactive bg-slate-900/90 rounded-2xl p-3 border ${borderClass} space-y-2 cursor-pointer group hover:border-brand-500/60 shadow-md">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-100 font-bold flex items-center gap-1.5 group-hover:text-brand-400 transition-colors">
+                <span class="text-sm">${p.icon}</span> ${p.name}
+              </span>
+              <div class="flex items-center gap-1.5">
+                <span class="font-black text-xs ${health.percentage <= 30 ? 'text-rose-400' : 'text-slate-200'}">${health.percentage}%</span>
+                <span class="text-[10px] bg-brand-500/20 text-brand-300 font-bold px-2 py-0.5 rounded-lg group-hover:bg-brand-500 group-hover:text-white transition-all">🛠️ Tap Ganti</span>
               </div>
             </div>
-          `;
-        });
-
-        div.innerHTML = `
-          <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
-            <div>
-              <h3 class="text-base font-black text-white flex items-center gap-2">
-                ${m.name} <span class="text-xs font-semibold text-slate-400">(${m.plat || m.type})</span>
-              </h3>
-              <p class="text-xs text-slate-400 mt-0.5">Servis Rutin Terakhir: <span class="text-brand-400 font-bold">${m.lastRoutineDate || 'Belum ada'}</span></p>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5">
+              <div class="${colorClass} h-full rounded-full transition-all" style="width: ${health.percentage}%"></div>
             </div>
-            <button onclick="exportICSModal('${m.name}', '${m.lastRoutineDate}')" class="text-[11px] bg-slate-800/90 hover:bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 active:scale-95 transition-all">
-              📅 Remind HP
-            </button>
-          </div>
-
-          <div class="grid grid-cols-1 gap-2.5 pt-1">
-            ${partsHTML}
+            <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+              <span>Terakhir: ${lastDate || '-'}</span>
+              <span>Target: ${p.intervalMonths} Bulan</span>
+            </div>
           </div>
         `;
-        fullMotorContainer.appendChild(div);
+
+        if (p.group === 'rutin') partsRutinHTML += itemHTML;
+        else partsSatuanHTML += itemHTML;
       });
+
+      div.innerHTML = `
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-base font-black text-white flex items-center gap-2">
+              ${m.name} <span class="text-xs font-semibold text-slate-400">(${m.plat || m.type})</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Servis Rutin Terakhir: <span class="text-brand-400 font-bold">${m.lastRoutineDate || 'Belum ada'}</span></p>
+          </div>
+          <button onclick="exportICSModal('${m.name}', '${m.lastRoutineDate}')" class="text-[11px] bg-slate-800/90 hover:bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 active:scale-95 transition-all">
+            📅 Remind HP
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <h4 class="text-xs font-bold text-brand-400 uppercase tracking-wider mb-2">🔄 Servis Rutin</h4>
+            <div class="grid grid-cols-1 gap-2">${partsRutinHTML || '<p class="text-xs text-slate-500">Tidak ada part rutin.</p>'}</div>
+          </div>
+          <div class="pt-2 border-t border-slate-800">
+            <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">⚡ Servis Satuan (Insidental)</h4>
+            <div class="grid grid-cols-1 gap-2">${partsSatuanHTML || '<p class="text-xs text-slate-500">Tidak ada part satuan.</p>'}</div>
+          </div>
+        </div>
+      `;
+      singleContainer.appendChild(div);
     }
 
     // RIWAYAT LOG RENDERER
@@ -764,7 +856,7 @@
             <div>
               <span class="text-xs font-black text-white">${motor ? motor.name : 'Motor'}</span>
               <span class="ml-2 text-[10px] px-2 py-0.5 rounded-md font-bold ${log.tipe === 'insidental' ? 'bg-amber-500/20 text-amber-300' : 'bg-brand-500/20 text-brand-300'}">
-                ${log.tipe === 'insidental' ? '⚡ Insidental' : '🔄 Servis Rutin'}
+                ${log.tipe === 'insidental' ? '⚡ Servis Satuan' : '🔄 Servis Rutin'}
               </span>
             </div>
             <span class="text-xs font-mono text-slate-400 font-medium">${log.tanggal}</span>
@@ -772,6 +864,8 @@
           <div class="text-xs text-slate-300 space-y-1">
             <p><strong>Bengkel:</strong> ${log.bengkel || '-'}</p>
             <p><strong>Part Diganti:</strong> ${log.partsChanged && log.partsChanged.length > 0 ? log.partsChanged.join(', ') : '-'}</p>
+            ${log.posisi ? `<p class="text-amber-300 text-[11px]"><strong>Posisi Ganti:</strong> ${log.posisi}</p>` : ''}
+            ${log.cvtNote ? `<p class="text-brand-300 text-[11px]"><strong>Rincian CVT:</strong> ${log.cvtNote}</p>` : ''}
             ${log.merekPart ? `<p class="text-slate-400 text-[11px]"><strong>Detail Merek:</strong> ${log.merekPart}</p>` : ''}
           </div>
           <div class="flex items-center justify-between border-t border-slate-800 pt-2 text-xs">
@@ -783,10 +877,12 @@
       });
     }
 
-    // SETTINGS SPAREPARTS LIST
+    // SETTINGS SPAREPARTS LIST (SEPARATED RUTIN & SATUAN)
     function renderPartsSettingsList() {
-      const container = document.getElementById('settingsPartsList');
-      container.innerHTML = '';
+      const containerRutin = document.getElementById('settingsPartsRutinList');
+      const containerSatuan = document.getElementById('settingsPartsSatuanList');
+      containerRutin.innerHTML = '';
+      containerSatuan.innerHTML = '';
 
       partsConfig.forEach(p => {
         const div = document.createElement('div');
@@ -804,7 +900,9 @@
             <button onclick="deleteCustomPart('${p.id}')" class="bg-rose-950/40 text-rose-400 px-2.5 py-1.5 rounded-xl text-[11px] font-bold">Hapus</button>
           </div>
         `;
-        container.appendChild(div);
+
+        if (p.group === 'rutin') containerRutin.appendChild(div);
+        else containerSatuan.appendChild(div);
       });
     }
 
@@ -823,29 +921,73 @@
       renderPartCheckboxesInForm();
     }
 
+    // RENDER PART CHECKBOXES INSIDE CATAT SERVIS FORM ACCORDING TO TYPE (RUTIN VS SATUAN)
     function renderPartCheckboxesInForm() {
       const motorId = document.getElementById('inputServisMotorId').value;
       const motor = motors.find(m => m.id === motorId);
+      const tipeServis = document.querySelector('input[name="tipeServis"]:checked').value;
       const container = document.getElementById('formPartCheckboxes');
       container.innerHTML = '';
 
       if (!motor) return;
 
+      const targetGroup = tipeServis === 'rutin' ? 'rutin' : 'satuan';
+
       partsConfig.forEach(p => {
+        if (p.group !== targetGroup) return;
         if (p.targetType !== 'all' && p.targetType !== motor.category) return;
+        
         const label = document.createElement('label');
-        label.className = 'flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800 cursor-pointer text-[11px] text-slate-200 font-medium has-[:checked]:border-brand-500 has-[:checked]:bg-brand-500/10 transition-all';
+        label.className = 'flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 cursor-pointer text-[11px] text-slate-200 font-medium has-[:checked]:border-brand-500 has-[:checked]:bg-brand-500/10 transition-all';
         label.innerHTML = `
-          <input type="checkbox" value="${p.id}" class="part-checkbox text-brand-500 rounded focus:ring-0">
-          <span>${p.icon} ${p.name}</span>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" value="${p.id}" onchange="toggleExtraOptionsForm()" class="part-checkbox text-brand-500 rounded focus:ring-0">
+            <span>${p.icon} ${p.name}</span>
+          </div>
         `;
         container.appendChild(label);
       });
+
+      toggleExtraOptionsForm();
     }
 
-    // FITUR UTAMA: EKSEKUSI TAP SPAREPART LANGSUNG DARI GARASI!
+    // TOGGLE EXTRA OPTIONS (POSISI BAN/REM & CVT NOTE)
+    function toggleExtraOptionsForm() {
+      const checkedPartEls = document.querySelectorAll('.part-checkbox:checked');
+      const checkedIds = Array.from(checkedPartEls).map(el => el.value);
+
+      const hasPosisiPart = checkedIds.includes('ban') || checkedIds.includes('kampas_rem');
+      const hasCvtPart = checkedIds.includes('servis_cvt');
+
+      const extraContainer = document.getElementById('extraOptionsContainer');
+      const posisiContainer = document.getElementById('optionPosisiContainer');
+      const cvtContainer = document.getElementById('optionCvtNoteContainer');
+
+      if (hasPosisiPart || hasCvtPart) {
+        extraContainer.classList.remove('hidden');
+      } else {
+        extraContainer.classList.add('hidden');
+      }
+
+      if (hasPosisiPart) posisiContainer.classList.remove('hidden');
+      else posisiContainer.classList.add('hidden');
+
+      if (hasCvtPart) cvtContainer.classList.remove('hidden');
+      else cvtContainer.classList.add('hidden');
+    }
+
+    // QUICK REPAIR TAP FROM GARASI
     function quickRepairPart(motorId, partId) {
       document.getElementById('inputServisMotorId').value = motorId;
+      const part = partsConfig.find(p => p.id === partId);
+      
+      // Auto select correct radio type
+      if (part && part.group === 'satuan') {
+        document.querySelectorAll('input[name="tipeServis"]')[1].checked = true;
+      } else {
+        document.querySelectorAll('input[name="tipeServis"]')[0].checked = true;
+      }
+
       renderPartCheckboxesInForm();
 
       setTimeout(() => {
@@ -853,12 +995,13 @@
         checkboxes.forEach(cb => {
           if (cb.value === partId) cb.checked = true;
         });
+        toggleExtraOptionsForm();
       }, 50);
 
       openModalCatatServis();
     }
 
-    // SAVE CATAT SERVIS
+    // SAVE SERVIS
     function handleSaveServis(e) {
       e.preventDefault();
 
@@ -877,6 +1020,16 @@
         return p ? p.name : id;
       });
 
+      let posisi = '';
+      let cvtNote = '';
+
+      if (partsChangedIds.includes('ban') || partsChangedIds.includes('kampas_rem')) {
+        posisi = document.getElementById('inputServisPosisi').value;
+      }
+      if (partsChangedIds.includes('servis_cvt')) {
+        cvtNote = document.getElementById('inputServisCvtNote').value;
+      }
+
       if (!partHealthStates[motorId]) partHealthStates[motorId] = {};
       partsChangedIds.forEach(id => {
         partHealthStates[motorId][id] = { lastChangedDate: tanggal };
@@ -894,6 +1047,8 @@
         tanggal,
         bengkel,
         merekPart,
+        posisi,
+        cvtNote,
         partsChanged: partsChangedNames,
         biayaPart,
         biayaJasa
@@ -909,15 +1064,16 @@
       e.preventDefault();
       const id = document.getElementById('inputPartId').value || 'part_' + Date.now();
       const name = document.getElementById('inputPartName').value;
+      const group = document.getElementById('inputPartGroup').value;
       const intervalMonths = parseInt(document.getElementById('inputPartIntervalMonths').value) || 6;
       const icon = document.getElementById('inputPartIcon').value || '🔧';
       const targetType = document.getElementById('inputPartTargetType').value;
 
       const existingIdx = partsConfig.findIndex(p => p.id === id);
       if (existingIdx >= 0) {
-        partsConfig[existingIdx] = { ...partsConfig[existingIdx], name, intervalMonths, icon, targetType };
+        partsConfig[existingIdx] = { ...partsConfig[existingIdx], name, group, intervalMonths, icon, targetType };
       } else {
-        partsConfig.push({ id, name, intervalMonths, category: 'Kustom', targetType, icon, approxCost: 50000 });
+        partsConfig.push({ id, name, group, intervalMonths, category: 'Kustom', targetType, icon, approxCost: 50000 });
       }
 
       saveToLocalStorage();
@@ -930,6 +1086,7 @@
       if (!part) return;
       document.getElementById('inputPartId').value = part.id;
       document.getElementById('inputPartName').value = part.name;
+      document.getElementById('inputPartGroup').value = part.group || 'satuan';
       document.getElementById('inputPartIntervalMonths').value = part.intervalMonths;
       document.getElementById('inputPartIcon').value = part.icon;
       document.getElementById('inputPartTargetType').value = part.targetType;
@@ -944,9 +1101,23 @@
       }
     }
 
+    // FACTORY RESET FIX: FULL CLEAR LOCAL STORAGE & RE-INIT WITH DEFAULT
+    function executeFactoryReset() {
+      localStorage.clear();
+      motors = JSON.parse(JSON.stringify(DEFAULT_MOTORS));
+      partsConfig = JSON.parse(JSON.stringify(DEFAULT_PARTS_LIST));
+      partHealthStates = {};
+      serviceLogs = [];
+      selectedGarasiMotorId = motors[0].id;
+
+      initData();
+      closeModalResetConfirm();
+      renderAllViews();
+    }
+
     function resetPartsToDefault() {
-      if (confirm('Kembalikan interval part ke rekomendasi awal pabrikan?')) {
-        partsConfig = [...DEFAULT_PARTS_LIST];
+      if (confirm('Kembalikan daftar part ke standar awal (Oli Mesin, Oli Gardan, Servis CVT, Ban, V-Belt, Aki, Kampas Rem)?')) {
+        partsConfig = JSON.parse(JSON.stringify(DEFAULT_PARTS_LIST));
         saveToLocalStorage();
         renderAllViews();
       }
@@ -973,6 +1144,7 @@
       };
 
       motors.push(newMotor);
+      selectedGarasiMotorId = newMotor.id;
       saveToLocalStorage();
       closeModalAddMotor();
       renderAllViews();
@@ -1028,7 +1200,7 @@ END:VCALENDAR`;
       fileReader.onload = function (event) {
         try {
           const parsed = JSON.parse(event.target.result);
-          if (parsed.motors) motors = parsed.motors;
+          if (parsed.motors) motors = parsed.parsed.motors || parsed.motors;
           if (parsed.partsConfig) partsConfig = parsed.partsConfig;
           if (parsed.partHealthStates) partHealthStates = parsed.partHealthStates;
           if (parsed.serviceLogs) serviceLogs = parsed.serviceLogs;
@@ -1040,17 +1212,6 @@ END:VCALENDAR`;
         }
       };
       fileReader.readAsText(e.target.files[0]);
-    }
-
-    function executeFactoryReset() {
-      localStorage.clear();
-      motors = DEFAULT_MOTORS;
-      partsConfig = DEFAULT_PARTS_LIST;
-      partHealthStates = {};
-      serviceLogs = [];
-      initData();
-      closeModalResetConfirm();
-      renderAllViews();
     }
 
     function switchTab(tabId) {
@@ -1077,12 +1238,14 @@ END:VCALENDAR`;
     }
 
     function navToGarasiMotor(motorId) {
+      selectedGarasiMotorId = motorId;
       switchTab('garasi');
-      const elem = document.getElementById(`motor-card-${motorId}`);
-      if (elem) elem.scrollIntoView({ behavior: 'smooth' });
     }
 
-    function openModalCatatServis() { document.getElementById('modalCatatServis').classList.remove('hidden'); }
+    function openModalCatatServis() { 
+      document.getElementById('modalCatatServis').classList.remove('hidden'); 
+      renderPartCheckboxesInForm();
+    }
     function closeModalCatatServis() { document.getElementById('modalCatatServis').classList.add('hidden'); }
     
     function openModalAddPart() { document.getElementById('modalAddPart').classList.remove('hidden'); }
