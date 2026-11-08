@@ -688,5 +688,1222 @@
         icons: [
           {
             src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%232563eb'/><text x='50' y='68' font-size='50' font-weight='900' text-anchor='middle' fill='white' font-family='sans-serif'>MC</text></svg>",
-            sizes: "512x
+            sizes: "512x512",
+            type: "image/svg+xml",
+            purpose: "any maskable"
+          }
+        ]
+      };
+
+      const stringManifest = JSON.stringify(manifestData);
+      const manifestBlob = new Blob([stringManifest], { type: 'application/json' });
+      const manifestURL = URL.createObjectURL(manifestBlob);
+      document.getElementById('manifestLink').setAttribute('href', manifestURL);
+
+      if ('serviceWorker' in navigator) {
+        const swCode = `
+          self.addEventListener('install', (e) => { e.waitUntil(self.skipWaiting()); });
+          self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
+          self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request).catch(() => caches.match(e.request))); });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Note:', err));
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('btnPWAInstall').classList.remove('hidden');
+      });
+    }
+
+    function triggerPWAInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById('btnPWAInstall').classList.add('hidden');
+          }
+          deferredPrompt = null;
+        });
+      }
+    }
+
+    function initData() {
+      const storedMotors = localStorage.getItem('motocare_motors');
+      const storedParts = localStorage.getItem('motocare_parts');
+      const storedStates = localStorage.getItem('motocare_states');
+      const storedLogs = localStorage.getItem('motocare_logs');
+
+      motors = storedMotors ? JSON.parse(storedMotors) : DEFAULT_MOTORS;
+      partsConfig = storedParts ? JSON.parse(storedParts) : DEFAULT_PARTS_LIST;
+      partHealthStates = storedStates ? JSON.parse(storedStates) : {};
+      serviceLogs = storedLogs ? JSON.parse(storedLogs) : [];
+
+      if (motors.length > 0 && !selectedGarasiMotorId) {
+        selectedGarasiMotorId = motors[0].id;
+      }
+
+      motors.forEach(m => {
+        if (!partHealthStates[m.id]) partHealthStates[m.id] = {};
+        partsConfig.forEach(p => {
+          if (!partHealthStates[m.id][p.id]) {
+            if (p.hasPosisi) {
+              partHealthStates[m.id][p.id] = {
+                lastChangedDepan: m.lastRoutineDate || '2026-08-01',
+                lastChangedBelakang: m.lastRoutineDate || '2026-05-01'
+              };
+            } else {
+              partHealthStates[m.id][p.id] = { lastChangedDate: m.lastRoutineDate || '2026-08-01' };
+            }
+          }
+        });
+      });
+
+      saveToLocalStorage();
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem('motocare_motors', JSON.stringify(motors));
+      localStorage.setItem('motocare_parts', JSON.stringify(partsConfig));
+      localStorage.setItem('motocare_states', JSON.stringify(partHealthStates));
+      localStorage.setItem('motocare_logs', JSON.stringify(serviceLogs));
+    }
+
+    // CALCULATE PART HEALTH
+    function calculatePartHealth(lastDateStr, intervalMonths) {
+      if (!lastDateStr) return { percentage: 100, daysRemaining: intervalMonths * 30, isCritical: false };
+      const lastDate = new Date(lastDateStr);
+      const today = new Date();
+      const diffTime = Math.abs(today - lastDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      const targetDays = intervalMonths * 30; 
+      const daysRemaining = targetDays - diffDays;
+      const percentage = Math.max(0, Math.min(100, Math.round((daysRemaining / targetDays) * 100)));
+
+      return {
+        percentage,
+        daysRemaining,
+        diffDays,
+        isCritical: percentage <= 30
+      };
+    }
+
+    // CALCULATE PAJAK STATUS (H-30 FILTER)
+    function checkPajakStatus(pajakDateStr) {
+      if (!pajakDateStr) return { isDue: false, daysLeft: 999 };
+      const pajakDate = new Date(pajakDateStr);
+      const today = new Date();
+      const diffTime = pajakDate - today;
+      const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return {
+        isDue: daysLeft <= 30,
+        daysLeft
+      };
+    }
+
+    function renderAllViews() {
+      renderDashboard();
+      renderGarasiAlerts();
+      renderRiwayatList();
+      renderPartsSettingsList();
+      renderSelectOptions();
+    }
+
+    // DASHBOARD RENDERER (CARD HOME HAS "BAYAR PAJAKKK !!!!" FLASHING IF H-30)
+    function renderDashboard() {
+      const container = document.getElementById('dashboardMotorCards');
+      container.innerHTML = '';
+
+      let totalAlertsCount = 0;
+      let totalForecastBudget = 0;
+
+      motors.forEach(m => {
+        let criticalPartsCount = 0;
+        partsConfig.forEach(p => {
+          if (p.targetType !== 'all' && p.targetType !== m.category) return;
+          const state = partHealthStates[m.id]?.[p.id];
+          if (p.hasPosisi) {
+            const hDepan = calculatePartHealth(state?.lastChangedDepan, p.intervalMonths);
+            const hBelakang = calculatePartHealth(state?.lastChangedBelakang, p.intervalMonths);
+            if (hDepan.isCritical || hBelakang.isCritical) {
+              criticalPartsCount++;
+              totalAlertsCount++;
+              totalForecastBudget += (p.approxCost || 50000);
+            }
+          } else {
+            const health = calculatePartHealth(state?.lastChangedDate, p.intervalMonths);
+            if (health.isCritical) {
+              criticalPartsCount++;
+              totalAlertsCount++;
+              totalForecastBudget += (p.approxCost || 50000);
+            }
+          }
+        });
+
+        const pajakTahunanInfo = checkPajakStatus(m.pajakTahunan);
+        const pajakPlatInfo = checkPajakStatus(m.pajakPlat);
+
+        if (pajakTahunanInfo.isDue) totalAlertsCount++;
+        if (pajakPlatInfo.isDue) totalAlertsCount++;
+
+        const card = document.createElement('div');
+        card.className = `bg-gradient-to-br ${m.color} p-4 rounded-3xl text-white shadow-xl relative overflow-hidden flex flex-col justify-between active:scale-95 transition-all cursor-pointer`;
+        card.onclick = () => navToGarasiMotor(m.id);
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[9px] bg-white/20 px-2.5 py-0.5 rounded-full font-extrabold uppercase tracking-wider">${m.category}</span>
+              ${criticalPartsCount > 0 || pajakTahunanInfo.isDue || pajakPlatInfo.isDue ? `<span class="bg-amber-400 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full">! ${criticalPartsCount + (pajakTahunanInfo.isDue ? 1 : 0) + (pajakPlatInfo.isDue ? 1 : 0)} Alert</span>` : '<span class="text-[9px] bg-emerald-400/20 text-emerald-200 font-bold px-2 py-0.5 rounded-full">Prima</span>'}
+            </div>
+            <h3 class="text-lg font-black leading-tight">${m.name}</h3>
+            <p class="text-xs text-white/80 font-medium">${m.type} • <span class="font-mono text-white/90 font-bold">${m.plat || '-'}</span></p>
+          </div>
+          
+          <div class="mt-3 pt-2.5 border-t border-white/15 space-y-1 text-[11px]">
+            <div class="flex justify-between items-center text-white/90">
+              <span class="text-white/70">📄 Pajak Tahunan:</span>
+              <span class="font-bold ${pajakTahunanInfo.isDue ? 'text-amber-300 font-extrabold' : ''}">${m.pajakTahunan || '-'} ${pajakTahunanInfo.isDue ? '<span class="animate-pulse text-rose-400 font-extrabold ml-1">BAYAR PAJAKKK !!!!</span>' : ''}</span>
+            </div>
+            <div class="flex justify-between items-center text-white/90">
+              <span class="text-white/70">💳 Plat 5 Tahun:</span>
+              <span class="font-bold ${pajakPlatInfo.isDue ? 'text-amber-300 font-extrabold' : ''}">${m.pajakPlat || '-'} ${pajakPlatInfo.isDue ? '<span class="animate-pulse text-rose-400 font-extrabold ml-1">BAYAR PAJAKKK !!!!</span>' : ''}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('headerAlertCount').innerText = `${totalAlertsCount} Alert`;
+      document.getElementById('alertCountBadge').innerText = `${totalAlertsCount} Kritis`;
+      document.getElementById('dashboardForecastAmount').innerText = `Rp ${totalForecastBudget.toLocaleString('id-ID')}`;
+      document.getElementById('dashboardForecastDesc').innerText = totalAlertsCount > 0 
+        ? `${totalAlertsCount} perbaikan & alert perlu perhatian` 
+        : 'Semua sparepart & pajak STNK aman';
+
+      const recentContainer = document.getElementById('dashboardRecentLogs');
+      recentContainer.innerHTML = '';
+      if (serviceLogs.length === 0) {
+        recentContainer.innerHTML = '<p class="text-xs text-slate-500 text-center py-2">Belum ada riwayat servis.</p>';
+      } else {
+        serviceLogs.slice(0, 3).forEach(log => {
+          const motor = motors.find(m => m.id === log.motorId);
+          const div = document.createElement('div');
+          div.className = 'flex items-center justify-between text-xs py-2 border-b border-slate-800/60 last:border-0';
+          div.innerHTML = `
+            <div>
+              <div class="font-bold text-slate-200">${motor ? motor.name : 'Motor'} • <span class="text-brand-400 font-semibold">${log.tipe === 'insidental' ? '⚡ Satuan' : '🔄 Rutin'}</span></div>
+              <div class="text-[10px] text-slate-400 mt-0.5">${log.tanggal} • ${log.bengkel || 'Bengkel'}</div>
+            </div>
+            <div class="font-extrabold text-emerald-400">Rp ${(log.biayaPart + log.biayaJasa).toLocaleString('id-ID')}</div>
+          `;
+          recentContainer.appendChild(div);
+        });
+      }
+    }
+
+    // GARASI & ALERT CENTER RENDERER (PAJAK CARDS HANYA MUNCUL DI GARASI JIKA H-30 / IS DUE)
+    function renderGarasiAlerts() {
+      const alertListContainer = document.getElementById('alertCenterList');
+      alertListContainer.innerHTML = '';
+
+      let activeAlerts = [];
+
+      motors.forEach(m => {
+        const pTahunan = checkPajakStatus(m.pajakTahunan);
+        if (pTahunan.isDue) {
+          activeAlerts.push({ type: 'pajak_tahunan', motor: m, daysLeft: pTahunan.daysLeft });
+        }
+        const pPlat = checkPajakStatus(m.pajakPlat);
+        if (pPlat.isDue) {
+          activeAlerts.push({ type: 'pajak_plat', motor: m, daysLeft: pPlat.daysLeft });
+        }
+      });
+
+      motors.forEach(m => {
+        partsConfig.forEach(p => {
+          if (p.targetType !== 'all' && p.targetType !== m.category) return;
+          const state = partHealthStates[m.id]?.[p.id];
+
+          if (p.hasPosisi) {
+            const hDepan = calculatePartHealth(state?.lastChangedDepan, p.intervalMonths);
+            const hBelakang = calculatePartHealth(state?.lastChangedBelakang, p.intervalMonths);
+
+            if (hDepan.isCritical) activeAlerts.push({ type: 'part_posisi', motor: m, part: p, subName: 'Depan', health: hDepan });
+            if (hBelakang.isCritical) activeAlerts.push({ type: 'part_posisi', motor: m, part: p, subName: 'Belakang', health: hBelakang });
+          } else {
+            const health = calculatePartHealth(state?.lastChangedDate, p.intervalMonths);
+            if (health.isCritical) activeAlerts.push({ type: 'part_single', motor: m, part: p, health });
+          }
+        });
+      });
+
+      if (activeAlerts.length === 0) {
+        alertListContainer.innerHTML = `
+          <div class="bg-emerald-950/20 border border-emerald-800/30 rounded-2xl p-3 text-center text-xs text-emerald-300 font-medium">
+            🎉 Semua sparepart motor & pajak STNK dalam kondisi aman!
+          </div>
+        `;
+      } else {
+        activeAlerts.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'bg-slate-900/90 border border-amber-500/30 rounded-2xl p-3 flex items-center justify-between text-xs';
+          
+          if (item.type === 'pajak_tahunan') {
+            div.innerHTML = `
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-1.5 font-extrabold text-white">
+                  <span>📄</span> Pajak STNK Tahunan
+                  <span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.2 rounded-md font-bold">${item.motor.name}</span>
+                </div>
+                <div class="text-[11px] text-amber-300 font-medium">${item.daysLeft <= 0 ? '⚠️ Lewat Jatuh Tempo!' : 'Jatuh tempo: ' + item.daysLeft + ' hari'}</div>
+              </div>
+              <button onclick="openModalBayarPajak('${item.motor.id}', 'tahunan')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3 py-1.5 rounded-xl shadow text-xs transition-all">
+                ✅ Bayar +1Thn
+              </button>
+            `;
+          } else if (item.type === 'pajak_plat') {
+            div.innerHTML = `
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-1.5 font-extrabold text-white">
+                  <span>💳</span> Ganti Plat 5 Tahunan
+                  <span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.2 rounded-md font-bold">${item.motor.name}</span>
+                </div>
+                <div class="text-[11px] text-amber-300 font-medium">${item.daysLeft <= 0 ? '⚠️ Lewat Jatuh Tempo!' : 'Jatuh tempo: ' + item.daysLeft + ' hari'}</div>
+              </div>
+              <button onclick="openModalBayarPajak('${item.motor.id}', 'plat')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3 py-1.5 rounded-xl shadow text-xs transition-all">
+                ✅ Bayar +5Thn
+              </button>
+            `;
+          } else if (item.type === 'part_posisi') {
+            div.innerHTML = `
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-1.5 font-extrabold text-white">
+                  <span>${item.part.icon}</span> ${item.part.name} (${item.subName})
+                  <span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.2 rounded-md font-bold">${item.motor.name}</span>
+                </div>
+                <div class="text-[11px] text-amber-300 font-medium">Sisa Kesehatan: <strong>${item.health.percentage}%</strong></div>
+              </div>
+              <button onclick="openModalDetailPart('${item.motor.id}', '${item.part.id}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1.5 rounded-xl shadow text-xs transition-all">
+                🔍 Detail
+              </button>
+            `;
+          } else {
+            div.innerHTML = `
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-1.5 font-extrabold text-white">
+                  <span>${item.part.icon}</span> ${item.part.name}
+                  <span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.2 rounded-md font-bold">${item.motor.name}</span>
+                </div>
+                <div class="text-[11px] text-amber-300 font-medium">Sisa Kesehatan: <strong>${item.health.percentage}%</strong></div>
+              </div>
+              <button onclick="openModalDetailPart('${item.motor.id}', '${item.part.id}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1.5 rounded-xl shadow text-xs transition-all">
+                🔍 Detail
+              </button>
+            `;
+          }
+          alertListContainer.appendChild(div);
+        });
+      }
+
+      // Motor Selector Tabs
+      const tabsContainer = document.getElementById('garasiMotorTabs');
+      tabsContainer.innerHTML = '';
+
+      if (motors.length === 0) {
+        document.getElementById('garasiSingleMotorView').innerHTML = '<div class="glass-card rounded-3xl p-6 text-center text-xs text-slate-400">Garasi Anda kosong. Silakan tambah motor baru.</div>';
+        return;
+      }
+
+      if (!selectedGarasiMotorId || !motors.find(m => m.id === selectedGarasiMotorId)) {
+        selectedGarasiMotorId = motors[0].id;
+      }
+
+      motors.forEach(m => {
+        const isSelected = m.id === selectedGarasiMotorId;
+        const btn = document.createElement('button');
+        btn.onclick = () => {
+          selectedGarasiMotorId = m.id;
+          renderGarasiAlerts();
+        };
+        btn.className = `px-4 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition-all border ${
+          isSelected 
+            ? 'bg-brand-600 border-brand-500 text-white shadow-lg shadow-brand-500/30' 
+            : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+        }`;
+        btn.innerText = `${m.name} (${m.type.split(' ')[0]})`;
+        tabsContainer.appendChild(btn);
+      });
+
+      // Render Selected Motor View
+      const singleContainer = document.getElementById('garasiSingleMotorView');
+      singleContainer.innerHTML = '';
+
+      const m = motors.find(item => item.id === selectedGarasiMotorId);
+      if (!m) return;
+
+      const pTahunanStatus = checkPajakStatus(m.pajakTahunan);
+      const pPlatStatus = checkPajakStatus(m.pajakPlat);
+
+      const div = document.createElement('div');
+      div.className = 'glass-card rounded-3xl p-4 space-y-4 shadow-xl border border-slate-800';
+
+      let partsRutinHTML = '';
+      let partsSatuanHTML = '';
+
+      partsConfig.forEach(p => {
+        if (p.targetType !== 'all' && p.targetType !== m.category) return;
+        const state = partHealthStates[m.id]?.[p.id];
+        
+        let overallPercent = 100;
+        let healthLabel = '';
+
+        if (p.hasPosisi) {
+          const hDepan = calculatePartHealth(state?.lastChangedDepan, p.intervalMonths);
+          const hBelakang = calculatePartHealth(state?.lastChangedBelakang, p.intervalMonths);
+          overallPercent = Math.min(hDepan.percentage, hBelakang.percentage);
+          healthLabel = `Depan: ${hDepan.percentage}% | Belakang: ${hBelakang.percentage}%`;
+        } else {
+          const health = calculatePartHealth(state?.lastChangedDate, p.intervalMonths);
+          overallPercent = health.percentage;
+          healthLabel = `${health.percentage}%`;
+        }
+
+        let colorClass = 'bg-emerald-500';
+        let borderClass = 'border-slate-800/80';
+        if (overallPercent <= 30) {
+          colorClass = 'bg-rose-500';
+          borderClass = 'border-rose-500/40 bg-rose-950/20';
+        } else if (overallPercent <= 60) {
+          colorClass = 'bg-amber-500';
+          borderClass = 'border-amber-500/30 bg-amber-950/10';
+        }
+
+        const itemHTML = `
+          <div onclick="openModalDetailPart('${m.id}', '${p.id}')" class="part-card-interactive bg-slate-900/90 rounded-2xl p-3 border ${borderClass} space-y-2 cursor-pointer group hover:border-brand-500/60 shadow-md">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-100 font-bold flex items-center gap-1.5 group-hover:text-brand-400 transition-colors">
+                <span class="text-sm">${p.icon}</span> ${p.name}
+              </span>
+              <div class="flex items-center gap-1.5">
+                <span class="font-black text-xs ${overallPercent <= 30 ? 'text-rose-400' : 'text-slate-200'}">${overallPercent}%</span>
+                <span class="text-[10px] bg-brand-500/20 text-brand-300 font-bold px-2 py-0.5 rounded-lg group-hover:bg-brand-500 group-hover:text-white transition-all">🔍 Detail</span>
+              </div>
+            </div>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5">
+              <div class="${colorClass} h-full rounded-full transition-all" style="width: ${overallPercent}%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+              <span>${healthLabel}</span>
+              <span>Target: ${p.intervalMonths} Bulan</span>
+            </div>
+          </div>
+        `;
+
+        if (p.group === 'rutin') partsRutinHTML += itemHTML;
+        else partsSatuanHTML += itemHTML;
+      });
+
+      // FILTER H-30 UNTUK DITAMPILKAN DI GARASI
+      let pajakBlockHTML = '';
+      if (pTahunanStatus.isDue || pPlatStatus.isDue) {
+        pajakBlockHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs border-b border-slate-800 pb-3">
+            ${pTahunanStatus.isDue ? `
+              <div class="bg-slate-900/80 border border-amber-500/40 rounded-2xl p-3 flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-amber-300 flex items-center gap-1"><span>📄</span> Pajak Tahunan</div>
+                  <div class="text-[11px] text-amber-400 font-bold">${m.pajakTahunan || '-'}</div>
+                </div>
+                <button onclick="openModalBayarPajak('${m.id}', 'tahunan')" class="bg-emerald-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-[11px] shadow">
+                  ✅ Bayar +1Thn
+                </button>
+              </div>
+            ` : ''}
+
+            ${pPlatStatus.isDue ? `
+              <div class="bg-slate-900/80 border border-amber-500/40 rounded-2xl p-3 flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-amber-300 flex items-center gap-1"><span>💳</span> Ganti Plat 5 Thn</div>
+                  <div class="text-[11px] text-amber-400 font-bold">${m.pajakPlat || '-'}</div>
+                </div>
+                <button onclick="openModalBayarPajak('${m.id}', 'plat')" class="bg-emerald-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-[11px] shadow">
+                  ✅ Bayar +5Thn
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      div.innerHTML = `
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-base font-black text-white flex items-center gap-2">
+              ${m.name} <span class="text-xs font-semibold text-slate-400">(${m.plat || m.type})</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Servis Rutin Terakhir: <span class="text-brand-400 font-bold">${m.lastRoutineDate || 'Belum ada'}</span></p>
+          </div>
+          <div class="flex items-center gap-1.5 no-print">
+            <button onclick="openModalEditMotor('${m.id}')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-2.5 py-1.5 rounded-xl border border-slate-700">
+              ✏️ Edit
+            </button>
+            <button onclick="printMotorHistory('${m.id}')" class="text-[11px] bg-brand-600/80 hover:bg-brand-600 text-white font-bold px-2.5 py-1.5 rounded-xl">
+              🖨️ PDF
+            </button>
+          </div>
+        </div>
+
+        ${pajakBlockHTML}
+
+        <div class="space-y-3">
+          <div>
+            <h4 class="text-xs font-bold text-brand-400 uppercase tracking-wider mb-2">🔄 Servis Rutin</h4>
+            <div class="grid grid-cols-1 gap-2">${partsRutinHTML || '<p class="text-xs text-slate-500">Tidak ada part rutin.</p>'}</div>
+          </div>
+          <div class="pt-2 border-t border-slate-800">
+            <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">⚡ Servis Satuan (Insidental)</h4>
+            <div class="grid grid-cols-1 gap-2">${partsSatuanHTML || '<p class="text-xs text-slate-500">Tidak ada part satuan.</p>'}</div>
+          </div>
+        </div>
+      `;
+      singleContainer.appendChild(div);
+    }
+
+    // MODAL BAYAR PAJAK & FOTO STRUK (KOMPRESI CLIENT-SIDE)
+    function openModalBayarPajak(motorId, type) {
+      const m = motors.find(item => item.id === motorId);
+      if (!m) return;
+
+      document.getElementById('inputPajakMotorId').value = motorId;
+      document.getElementById('inputPajakType').value = type;
+      document.getElementById('modalPajakMotorName').innerText = `${m.name} (${m.plat || m.type})`;
+      document.getElementById('modalPajakTypeName').innerText = type === 'tahunan' ? 'Pajak STNK Tahunan (+1 Tahun)' : 'Ganti Plat 5 Tahunan (+5 Tahun)';
+      document.getElementById('inputPajakTanggalBayar').value = new Date().toISOString().split('T')[0];
+      
+      clearFotoPajak();
+      document.getElementById('modalBayarPajak').classList.remove('hidden');
+    }
+
+    function closeModalBayarPajak() {
+      document.getElementById('modalBayarPajak').classList.add('hidden');
+    }
+
+    function previewFotoPajak(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const img = new Image();
+        img.onload = function () {
+          // Compress Image via Canvas
+          const canvas = document.createElement('canvas');
+          const maxDim = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height && width > maxDim) {
+            height *= maxDim / width;
+            width = maxDim;
+          } else if (height > maxDim) {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          tempFotoBase64 = canvas.toDataURL('image/jpeg', 0.65);
+          document.getElementById('imgPajakPreview').src = tempFotoBase64;
+          document.getElementById('previewPajakFotoContainer').classList.remove('hidden');
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearFotoPajak() {
+      tempFotoBase64 = null;
+      document.getElementById('inputPajakFotoFile').value = '';
+      document.getElementById('imgPajakPreview').src = '#';
+      document.getElementById('previewPajakFotoContainer').classList.add('hidden');
+    }
+
+    function handleSaveBayarPajak(e) {
+      e.preventDefault();
+      const motorId = document.getElementById('inputPajakMotorId').value;
+      const type = document.getElementById('inputPajakType').value;
+      const tglBayar = document.getElementById('inputPajakTanggalBayar').value;
+
+      const m = motors.find(item => item.id === motorId);
+      if (!m) return;
+
+      if (type === 'tahunan') {
+        const currentDate = m.pajakTahunan ? new Date(m.pajakTahunan) : new Date();
+        currentDate.setFullYear(currentDate.getFullYear() + 1);
+        m.pajakTahunan = currentDate.toISOString().split('T')[0];
+      } else {
+        const currentDate = m.pajakPlat ? new Date(m.pajakPlat) : new Date();
+        currentDate.setFullYear(currentDate.getFullYear() + 5);
+        m.pajakPlat = currentDate.toISOString().split('T')[0];
+      }
+
+      // Catat ke Log Kwitansi
+      const logData = {
+        id: 'log_pajak_' + Date.now(),
+        motorId,
+        tipe: 'insidental',
+        tanggal: tglBayar,
+        bengkel: 'Samsat / Pajak STNK',
+        merekPart: type === 'tahunan' ? 'Pajak Tahunan STNK' : 'Ganti Plat 5 Tahunan',
+        partsChanged: [type === 'tahunan' ? 'Pajak STNK Tahunan' : 'Plat 5 Tahunan'],
+        biayaPart: 0,
+        biayaJasa: 0,
+        fotoStruk: tempFotoBase64
+      };
+      serviceLogs.unshift(logData);
+
+      saveToLocalStorage();
+      closeModalBayarPajak();
+      renderAllViews();
+    }
+
+    // LIGHTBOX PREVIEW FOTO STRUK
+    function openLightbox(base64Src) {
+      if (!base64Src) return;
+      document.getElementById('lightboxImage').src = base64Src;
+      document.getElementById('modalLightbox').classList.remove('hidden');
+    }
+
+    function closeLightbox() {
+      document.getElementById('modalLightbox').classList.add('hidden');
+    }
+
+    // MODAL DETAIL SPAREPART
+    function openModalDetailPart(motorId, partId) {
+      activeDetailMotorId = motorId;
+      activeDetailPartId = partId;
+
+      const motor = motors.find(m => m.id === motorId);
+      const part = partsConfig.find(p => p.id === partId);
+      if (!motor || !part) return;
+
+      document.getElementById('detailPartIcon').innerText = part.icon;
+      document.getElementById('detailPartTitle').innerText = part.name;
+      document.getElementById('detailPartMotorBadge').innerText = motor.name;
+
+      const state = partHealthStates[motorId]?.[partId];
+      const healthContainer = document.getElementById('detailPartHealthContainer');
+      const actionContainer = document.getElementById('detailPartActionContainer');
+
+      healthContainer.innerHTML = '';
+      actionContainer.innerHTML = '';
+
+      if (part.hasPosisi) {
+        const hDepan = calculatePartHealth(state?.lastChangedDepan, part.intervalMonths);
+        const hBelakang = calculatePartHealth(state?.lastChangedBelakang, part.intervalMonths);
+
+        healthContainer.innerHTML = `
+          <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-800 space-y-1.5">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-slate-200">🔵 ${part.name} Depan</span>
+              <span class="text-sm font-black ${hDepan.percentage <= 30 ? 'text-rose-400' : 'text-emerald-400'}">${hDepan.percentage}%</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5">
+              <div class="${hDepan.percentage <= 30 ? 'bg-rose-500' : 'bg-emerald-500'} h-full rounded-full" style="width: ${hDepan.percentage}%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400">
+              <span>Terakhir: ${state?.lastChangedDepan || '-'}</span>
+              <span>Target: ${part.intervalMonths} Bulan</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-800 space-y-1.5">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-slate-200">🔴 ${part.name} Belakang</span>
+              <span class="text-sm font-black ${hBelakang.percentage <= 30 ? 'text-rose-400' : 'text-emerald-400'}">${hBelakang.percentage}%</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5">
+              <div class="${hBelakang.percentage <= 30 ? 'bg-rose-500' : 'bg-emerald-500'} h-full rounded-full" style="width: ${hBelakang.percentage}%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400">
+              <span>Terakhir: ${state?.lastChangedBelakang || '-'}</span>
+              <span>Target: ${part.intervalMonths} Bulan</span>
+            </div>
+          </div>
+        `;
+
+        actionContainer.innerHTML = `
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="executeRepairDual('depan')" class="bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-2xl text-xs active:scale-95 transition-all">
+              🛠️ Ganti Depan Saja
+            </button>
+            <button onclick="executeRepairDual('belakang')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-2xl text-xs active:scale-95 transition-all">
+              🛠️ Ganti Belakang Saja
+            </button>
+          </div>
+          <button onclick="executeRepairDual('both')" class="w-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-black py-3 rounded-2xl text-xs active:scale-95 transition-all">
+            🛠️ Ganti Sepaket (Depan & Belakang)
+          </button>
+        `;
+      } else {
+        const health = calculatePartHealth(state?.lastChangedDate, part.intervalMonths);
+        healthContainer.innerHTML = `
+          <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 space-y-2">
+            <div class="flex justify-between items-baseline">
+              <span class="text-xs font-bold text-slate-300">Tingkat Kesehatan</span>
+              <span class="text-lg font-black ${health.percentage <= 30 ? 'text-rose-400' : 'text-emerald-400'}">${health.percentage}%</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5">
+              <div class="${health.percentage <= 30 ? 'bg-rose-500' : 'bg-emerald-500'} h-full rounded-full transition-all" style="width: ${health.percentage}%"></div>
+            </div>
+            <div class="flex justify-between text-[11px] text-slate-400 pt-1">
+              <span>Terakhir Diganti: <strong class="text-slate-200">${state?.lastChangedDate || '-'}</strong></span>
+              <span>Target: <strong class="text-slate-200">${part.intervalMonths} Bulan</strong></span>
+            </div>
+          </div>
+        `;
+
+        actionContainer.innerHTML = `
+          <button onclick="executeRepairSingle()" class="w-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-black py-3.5 rounded-2xl shadow-xl transition-all text-xs tracking-wider flex items-center justify-center gap-2">
+            <span>🛠️</span> GANTI PART INI SEKARANG
+          </button>
+        `;
+      }
+
+      const logsForPart = serviceLogs.filter(l => l.motorId === motorId && l.partsChanged && l.partsChanged.includes(part.name));
+      const historyListContainer = document.getElementById('detailPartHistoryList');
+      historyListContainer.innerHTML = '';
+
+      if (logsForPart.length === 0) {
+        historyListContainer.innerHTML = '<p class="text-xs text-slate-500 py-1">Belum ada catatan riwayat penggantian part ini.</p>';
+      } else {
+        logsForPart.forEach(l => {
+          const div = document.createElement('div');
+          div.className = 'bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex justify-between items-center text-xs';
+          div.innerHTML = `
+            <div>
+              <div class="font-bold text-slate-200">${l.tanggal}</div>
+              <div class="text-[10px] text-slate-400">${l.bengkel || 'Bengkel'} ${l.posisiChoice ? '• ' + l.posisiChoice : ''}</div>
+            </div>
+            <div class="font-bold text-emerald-400 text-xs">Rp ${(l.biayaPart + l.biayaJasa).toLocaleString('id-ID')}</div>
+          `;
+          historyListContainer.appendChild(div);
+        });
+      }
+
+      document.getElementById('modalDetailPart').classList.remove('hidden');
+    }
+
+    function closeModalDetailPart() {
+      document.getElementById('modalDetailPart').classList.add('hidden');
+    }
+
+    function executeRepairSingle() {
+      closeModalDetailPart();
+      if (activeDetailMotorId && activeDetailPartId) {
+        quickRepairPart(activeDetailMotorId, activeDetailPartId);
+      }
+    }
+
+    function executeRepairDual(posisiChoice) {
+      closeModalDetailPart();
+      if (activeDetailMotorId && activeDetailPartId) {
+        quickRepairPart(activeDetailMotorId, activeDetailPartId, posisiChoice);
+      }
+    }
+
+    // RIWAYAT LOG RENDERER (SHOWS FOTO STRUK LIGHTBOX)
+    function renderRiwayatList() {
+      const container = document.getElementById('riwayatLogList');
+      const filterValue = document.getElementById('filterMotorLog').value;
+      container.innerHTML = '';
+
+      const filteredLogs = filterValue === 'ALL' ? serviceLogs : serviceLogs.filter(l => l.motorId === filterValue);
+
+      if (filteredLogs.length === 0) {
+        container.innerHTML = '<div class="glass-card rounded-3xl p-6 text-center text-xs text-slate-400">Belum ada riwayat servis.</div>';
+        return;
+      }
+
+      filteredLogs.forEach(log => {
+        const motor = motors.find(m => m.id === log.motorId);
+        const total = log.biayaPart + log.biayaJasa;
+        const div = document.createElement('div');
+        div.className = 'glass-card rounded-3xl p-4 space-y-2.5';
+        div.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div>
+              <span class="text-xs font-black text-white">${motor ? motor.name : 'Motor'}</span>
+              <span class="ml-2 text-[10px] px-2 py-0.5 rounded-md font-bold ${log.tipe === 'insidental' ? 'bg-amber-500/20 text-amber-300' : 'bg-brand-500/20 text-brand-300'}">
+                ${log.tipe === 'insidental' ? '⚡ Servis Satuan' : '🔄 Servis Rutin'}
+              </span>
+            </div>
+            <span class="text-xs font-mono text-slate-400 font-medium">${log.tanggal}</span>
+          </div>
+          <div class="text-xs text-slate-300 space-y-1">
+            <p><strong>Bengkel:</strong> ${log.bengkel || '-'}</p>
+            <p><strong>Part Diganti:</strong> ${log.partsChanged && log.partsChanged.length > 0 ? log.partsChanged.join(', ') : '-'}</p>
+            ${log.posisiChoice ? `<p class="text-amber-300 text-[11px]"><strong>Posisi Ganti:</strong> ${log.posisiChoice}</p>` : ''}
+            ${log.merekPart ? `<p class="text-slate-400 text-[11px]"><strong>Rincian / Merek:</strong> ${log.merekPart}</p>` : ''}
+          </div>
+          
+          ${log.fotoStruk ? `
+            <div class="pt-1">
+              <button onclick="openLightbox('${log.fotoStruk}')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-brand-300 font-bold px-3 py-1 rounded-xl border border-slate-700 flex items-center gap-1">
+                📷 Lihat Foto Struk / STNK
+              </button>
+            </div>
+          ` : ''}
+
+          <div class="flex items-center justify-between border-t border-slate-800 pt-2 text-xs">
+            <span class="text-slate-400 font-medium">Total Biaya:</span>
+            <span class="font-extrabold text-emerald-400 text-sm">Rp ${total.toLocaleString('id-ID')}</span>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // SETTINGS SPAREPARTS LIST
+    function renderPartsSettingsList() {
+      const containerRutin = document.getElementById('settingsPartsRutinList');
+      const containerSatuan = document.getElementById('settingsPartsSatuanList');
+      containerRutin.innerHTML = '';
+      containerSatuan.innerHTML = '';
+
+      partsConfig.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex items-center justify-between text-xs';
+        div.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg">${p.icon}</span>
+            <div>
+              <div class="font-bold text-white flex items-center gap-1.5">
+                ${p.name} ${p.hasPosisi ? '<span class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-bold">Dual Posisi</span>' : ''}
+              </div>
+              <div class="text-[10px] text-slate-400">Target: <strong class="text-brand-400">${p.intervalMonths} Bulan</strong> (${p.targetType})</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="openModalEditPart('${p.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-xl text-[11px] font-bold">Edit</button>
+            <button onclick="deleteCustomPart('${p.id}')" class="bg-rose-950/40 text-rose-400 px-2.5 py-1.5 rounded-xl text-[11px] font-bold">Hapus</button>
+          </div>
+        `;
+
+        if (p.group === 'rutin') containerRutin.appendChild(div);
+        else containerSatuan.appendChild(div);
+      });
+    }
+
+    function renderSelectOptions() {
+      const selectServisMotor = document.getElementById('inputServisMotorId');
+      const selectFilterMotor = document.getElementById('filterMotorLog');
+
+      selectServisMotor.innerHTML = '';
+      selectFilterMotor.innerHTML = '<option value="ALL">Semua Motor</option>';
+
+      motors.forEach(m => {
+        selectServisMotor.innerHTML += `<option value="${m.id}">${m.name} (${m.type})</option>`;
+        selectFilterMotor.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+      });
+
+      renderPartCheckboxesInForm();
+    }
+
+    function renderPartCheckboxesInForm() {
+      const motorId = document.getElementById('inputServisMotorId').value;
+      const motor = motors.find(m => m.id === motorId);
+      const tipeServis = document.querySelector('input[name="tipeServis"]:checked').value;
+      const container = document.getElementById('formPartCheckboxes');
+      container.innerHTML = '';
+
+      if (!motor) return;
+
+      const targetGroup = tipeServis === 'rutin' ? 'rutin' : 'satuan';
+
+      partsConfig.forEach(p => {
+        if (p.group !== targetGroup) return;
+        if (p.targetType !== 'all' && p.targetType !== motor.category) return;
+        
+        const label = document.createElement('label');
+        label.className = 'flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 cursor-pointer text-[11px] text-slate-200 font-medium has-[:checked]:border-brand-500 has-[:checked]:bg-brand-500/10 transition-all';
+        label.innerHTML = `
+          <div class="flex items-center gap-2">
+            <input type="checkbox" value="${p.id}" onchange="togglePosisiBoxInForm()" class="part-checkbox text-brand-500 rounded focus:ring-0">
+            <span>${p.icon} ${p.name} ${p.hasPosisi ? '(Dual Posisi)' : ''}</span>
+          </div>
+        `;
+        container.appendChild(label);
+      });
+
+      togglePosisiBoxInForm();
+    }
+
+    function togglePosisiBoxInForm() {
+      const checkedEls = document.querySelectorAll('.part-checkbox:checked');
+      const checkedIds = Array.from(checkedEls).map(el => el.value);
+
+      const hasDualPartChecked = checkedIds.some(id => {
+        const p = partsConfig.find(item => item.id === id);
+        return p && p.hasPosisi;
+      });
+
+      const box = document.getElementById('posisiSelectionBox');
+      if (hasDualPartChecked) box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function quickRepairPart(motorId, partId, presetPosisi) {
+      document.getElementById('inputServisMotorId').value = motorId;
+      const part = partsConfig.find(p => p.id === partId);
+      
+      if (part && part.group === 'satuan') {
+        document.querySelectorAll('input[name="tipeServis"]')[1].checked = true;
+      } else {
+        document.querySelectorAll('input[name="tipeServis"]')[0].checked = true;
+      }
+
+      renderPartCheckboxesInForm();
+
+      setTimeout(() => {
+        const checkboxes = document.querySelectorAll('.part-checkbox');
+        checkboxes.forEach(cb => {
+          if (cb.value === partId) cb.checked = true;
+        });
+        togglePosisiBoxInForm();
+        if (presetPosisi) {
+          document.getElementById('inputServisPosisiSelect').value = presetPosisi;
+        }
+      }, 50);
+
+      openModalCatatServis();
+    }
+
+    function handleSaveServis(e) {
+      e.preventDefault();
+
+      const motorId = document.getElementById('inputServisMotorId').value;
+      const tipe = document.querySelector('input[name="tipeServis"]:checked').value;
+      const tanggal = document.getElementById('inputServisTanggal').value;
+      const bengkel = document.getElementById('inputServisBengkel').value;
+      const merekPart = document.getElementById('inputServisMerekPart').value;
+      const biayaPart = parseFloat(document.getElementById('inputServisBiayaPart').value) || 0;
+      const biayaJasa = parseFloat(document.getElementById('inputServisBiayaJasa').value) || 0;
+      const posisiChoice = document.getElementById('inputServisPosisiSelect').value;
+
+      const checkedPartEls = document.querySelectorAll('.part-checkbox:checked');
+      const partsChangedIds = Array.from(checkedPartEls).map(el => el.value);
+      const partsChangedNames = partsChangedIds.map(id => {
+        const p = partsConfig.find(item => item.id === id);
+        return p ? p.name : id;
+      });
+
+      if (!partHealthStates[motorId]) partHealthStates[motorId] = {};
+      
+      partsChangedIds.forEach(id => {
+        const p = partsConfig.find(item => item.id === id);
+        if (p && p.hasPosisi) {
+          if (!partHealthStates[motorId][id]) partHealthStates[motorId][id] = {};
+          if (posisiChoice === 'depan') {
+            partHealthStates[motorId][id].lastChangedDepan = tanggal;
+          } else if (posisiChoice === 'belakang') {
+            partHealthStates[motorId][id].lastChangedBelakang = tanggal;
+          } else {
+            partHealthStates[motorId][id].lastChangedDepan = tanggal;
+            partHealthStates[motorId][id].lastChangedBelakang = tanggal;
+          }
+        } else {
+          partHealthStates[motorId][id] = { lastChangedDate: tanggal };
+        }
+      });
+
+      if (tipe === 'rutin') {
+        const motor = motors.find(m => m.id === motorId);
+        if (motor) motor.lastRoutineDate = tanggal;
+      }
+
+      const logData = {
+        id: 'log_' + Date.now(),
+        motorId,
+        tipe,
+        tanggal,
+        bengkel,
+        merekPart,
+        posisiChoice: partsChangedIds.some(id => partsConfig.find(p=>p.id===id)?.hasPosisi) ? posisiChoice : '',
+        partsChanged: partsChangedNames,
+        biayaPart,
+        biayaJasa
+      };
+      serviceLogs.unshift(logData);
+
+      saveToLocalStorage();
+      closeModalCatatServis();
+      renderAllViews();
+    }
+
+    // MANAGE MOTOR
+    function openModalEditMotor(motorId) {
+      const m = motors.find(item => item.id === motorId);
+      if (!m) return;
+      document.getElementById('modalMotorTitle').innerText = 'Edit Sepeda Motor';
+      document.getElementById('inputMotorId').value = m.id;
+      document.getElementById('inputMotorNama').value = m.name;
+      document.getElementById('inputMotorTipe').value = m.type;
+      document.getElementById('inputMotorKategori').value = m.category;
+      document.getElementById('inputMotorPlat').value = m.plat || '';
+      document.getElementById('inputMotorPajakTahunan').value = m.pajakTahunan || '';
+      document.getElementById('inputMotorPajakPlat').value = m.pajakPlat || '';
+      document.getElementById('btnDeleteMotor').classList.remove('hidden');
+      openModalAddMotor();
+    }
+
+    function handleSaveMotor(e) {
+      e.preventDefault();
+      const id = document.getElementById('inputMotorId').value;
+      const name = document.getElementById('inputMotorNama').value;
+      const type = document.getElementById('inputMotorTipe').value;
+      const category = document.getElementById('inputMotorKategori').value;
+      const plat = document.getElementById('inputMotorPlat').value;
+      const pajakTahunan = document.getElementById('inputMotorPajakTahunan').value;
+      const pajakPlat = document.getElementById('inputMotorPajakPlat').value;
+
+      if (id) {
+        const idx = motors.findIndex(m => m.id === id);
+        if (idx >= 0) {
+          motors[idx] = { ...motors[idx], name, type, category, plat, pajakTahunan, pajakPlat };
+        }
+      } else {
+        const colors = ['from-blue-600 to-indigo-700', 'from-rose-600 to-red-700', 'from-amber-500 to-orange-600', 'from-emerald-600 to-teal-700'];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+        const newMotor = {
+          id: 'm_' + Date.now(),
+          name,
+          type,
+          category,
+          plat,
+          color: randomColor,
+          lastRoutineDate: new Date().toISOString().split('T')[0],
+          pajakTahunan,
+          pajakPlat
+        };
+        motors.push(newMotor);
+        selectedGarasiMotorId = newMotor.id;
+      }
+
+      saveToLocalStorage();
+      closeModalAddMotor();
+      renderAllViews();
+    }
+
+    function executeDeleteMotor() {
+      const id = document.getElementById('inputMotorId').value;
+      const m = motors.find(item => item.id === id);
+      if (!m) return;
+
+      motors = motors.filter(item => item.id !== id);
+      if (partHealthStates[id]) delete partHealthStates[id];
+      serviceLogs = serviceLogs.filter(l => l.motorId !== id);
+
+      if (motors.length > 0) selectedGarasiMotorId = motors[0].id;
+      else selectedGarasiMotorId = null;
+
+      saveToLocalStorage();
+      closeModalAddMotor();
+      renderAllViews();
+    }
+
+    function printMotorHistory(motorId) {
+      selectedGarasiMotorId = motorId;
+      renderGarasiAlerts();
+      setTimeout(() => window.print(), 200);
+    }
+
+    function handleSavePart(e) {
+      e.preventDefault();
+      const id = document.getElementById('inputPartId').value || 'part_' + Date.now();
+      const name = document.getElementById('inputPartName').value;
+      const group = document.getElementById('inputPartGroup').value;
+      const intervalMonths = parseInt(document.getElementById('inputPartIntervalMonths').value) || 6;
+      const icon = document.getElementById('inputPartIcon').value || '🔧';
+      const targetType = document.getElementById('inputPartTargetType').value;
+      const hasPosisi = document.getElementById('inputPartHasPosisi').checked;
+
+      const existingIdx = partsConfig.findIndex(p => p.id === id);
+      if (existingIdx >= 0) {
+        partsConfig[existingIdx] = { ...partsConfig[existingIdx], name, group, intervalMonths, icon, targetType, hasPosisi };
+      } else {
+        partsConfig.push({ id, name, group, intervalMonths, category: 'Kustom', targetType, icon, approxCost: 50000, hasPosisi });
+      }
+
+      saveToLocalStorage();
+      closeModalAddPart();
+      renderAllViews();
+    }
+
+    function openModalEditPart(id) {
+      const part = partsConfig.find(p => p.id === id);
+      if (!part) return;
+      document.getElementById('inputPartId').value = part.id;
+      document.getElementById('inputPartName').value = part.name;
+      document.getElementById('inputPartGroup').value = part.group || 'satuan';
+      document.getElementById('inputPartIntervalMonths').value = part.intervalMonths;
+      document.getElementById('inputPartIcon').value = part.icon;
+      document.getElementById('inputPartTargetType').value = part.targetType;
+      document.getElementById('inputPartHasPosisi').checked = !!part.hasPosisi;
+      openModalAddPart();
+    }
+
+    function deleteCustomPart(id) {
+      partsConfig = partsConfig.filter(p => p.id !== id);
+      saveToLocalStorage();
+      renderAllViews();
+    }
+
+    // SAFE RESET: HANYA HAPUS MOTOR & LOG, MAINTAIN PARTSCONFIG
+    function executeFactoryReset() {
+      const preservedParts = [...partsConfig];
+      localStorage.clear();
+      
+      motors = [];
+      partsConfig = preservedParts.length > 0 ? preservedParts : DEFAULT_PARTS_LIST;
+      partHealthStates = {};
+      serviceLogs = [];
+      selectedGarasiMotorId = null;
+
+      saveToLocalStorage();
+      closeModalResetConfirm();
+      renderAllViews();
+    }
+
+    function resetPartsToDefault() {
+      partsConfig = JSON.parse(JSON.stringify(DEFAULT_PARTS_LIST));
+      saveToLocalStorage();
+      renderAllViews();
+    }
+
+    function exportJSON() {
+      const data = { motors, partsConfig, partHealthStates, serviceLogs };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `MotoCare_Backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importJSON(e) {
+      const fileReader = new FileReader();
+      fileReader.onload = function (event) {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (parsed.motors) motors = parsed.motors;
+          if (parsed.partsConfig) partsConfig = parsed.partsConfig;
+          if (parsed.partHealthStates) partHealthStates = parsed.partHealthStates;
+          if (parsed.serviceLogs) serviceLogs = parsed.serviceLogs;
+          saveToLocalStorage();
+          renderAllViews();
+        } catch (err) {
+          // Handled gracefully
+        }
+      };
+      fileReader.readAsText(e.target.files[0]);
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-brand-400');
+        btn.classList.add('text-slate-400');
+      });
+      const activeNav = document.getElementById(`nav-${tabId}`);
+      if (activeNav) {
+        activeNav.classList.remove('text-slate-400');
+        activeNav.classList.add('text-brand-400');
+      }
+
+      if (tabId === 'analisis') renderChartBiaya();
+    }
+
+    function navToGarasiAlerts() {
+      switchTab('garasi');
+      const alertElem = document.getElementById('alertCenterGarasi');
+      if (alertElem) alertElem.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function navToGarasiMotor(motorId) {
+      selectedGarasiMotorId = motorId;
+      switchTab('garasi');
+    }
+
+    function openModalCatatServis() { 
+      document.getElementById('modalCatatServis').classList.remove('hidden'); 
+      renderPartCheckboxesInForm();
+    }
+    function closeModalCatatServis() { document.getElementById('modalCatatServis').classList.add('hidden'); }
+    
+    function openModalAddPart() { document.getElementById('modalAddPart').classList.remove('hidden'); }
+    function closeModalAddPart() { 
+      document.getElementById('modalAddPart').classList.add('hidden'); 
+      document.getElementById('inputPartId').value = '';
+      document.getElementById('inputPartHasPosisi').checked = false;
+      document.getElementById('formAddPart').reset();
+    }
+
+    function openModalAddMotor() { document.getElementById('modalAddMotor').classList.remove('hidden'); }
+    function closeModalAddMotor() { 
+      document.getElementById('modalAddMotor').classList.add('hidden'); 
+      document.getElementById('inputMotorId').value = '';
+      document.getElementById('modalMotorTitle').innerText = 'Tambah Sepeda Motor';
+      document.getElementById('btnDeleteMotor').classList.add('hidden');
+      document.getElementById('formAddMotor').reset();
+    }
+
+    function openModalResetConfirm() { document.getElementById('modalResetConfirm').classList.remove('hidden'); }
+    function closeModalResetConfirm() { document.getElementById('modalResetConfirm').classList.add('hidden'); }
+
+    function renderChartBiaya() {
+      const ctx = document.getElementById('chartBiayaMotor').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      const labels = motors.map(m => m.name);
+      const dataTotals = motors.map(m => {
+        return serviceLogs
+          .filter(l => l.motorId === m.id)
+          .reduce((sum, l) => sum + (l.biayaPart + l.biayaJasa), 0);
+      });
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Total Biaya (Rp)',
+            data: dataTotals,
+            backgroundColor: ['#3b82f6', '#f43f5e', '#f59e0b', '#10b981', '#8b5cf6'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+            x: { ticks: { color: '#f8fafc', font: { size: 11, weight: 'bold' } }, grid: { display: false } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
 </html>
