@@ -390,7 +390,9 @@
       <form id="formCatatServis" onsubmit="handleSaveServis(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">Pilih Motor</label>
-          <select id="inputServisMotorId" onchange="renderPartCheckboxesInForm()" class="w-full bg-slate-900 border border-slate-700 text-white font-semibold rounded-2xl px-3.5 py-3 text-xs focus:ring-2 focus:ring-brand-500" required></select>
+          <select id="inputServisMotorId" onchange="renderPartCheckboxesInForm()" class="w-full bg-slate-900 border border-slate-700 text-white font-semibold rounded-2xl px-3.5 py-3 text-xs focus:ring-2 focus:ring-brand-500" required>
+            <option value="" disabled selected>-- Pilih Motor --</option>
+          </select>
         </div>
 
         <div>
@@ -426,7 +428,7 @@
 
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">Pilih Sparepart yang Diganti</label>
-          <div id="formPartCheckboxes" class="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto p-2.5 bg-slate-900/90 rounded-2xl border border-slate-700/80 text-xs"></div>
+          <div id="formPartCheckboxes" class="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto p-2.5 bg-slate-900/90 rounded-2xl border border-slate-700/80 text-xs text-slate-400 text-center py-4">Silakan pilih motor terlebih dahulu</div>
         </div>
 
         <div id="posisiSelectionBox" class="hidden bg-slate-900/80 p-3 rounded-2xl border border-slate-800 space-y-2">
@@ -583,7 +585,6 @@
   <div id="modalResetConfirm" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4 no-print">
     <div class="bg-android-card border border-slate-800 w-full max-w-sm rounded-3xl p-5 space-y-4 text-center shadow-2xl">
       
-      <!-- TAHAP 1 CONFIRMATION -->
       <div id="resetStep1" class="space-y-4">
         <div class="w-12 h-12 bg-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto text-2xl font-black">
           ⚠️
@@ -605,7 +606,6 @@
         </div>
       </div>
 
-      <!-- TAHAP 2 CONFIRMATION (KETIK "HAPUS") -->
       <div id="resetStep2" class="hidden space-y-4">
         <div class="w-12 h-12 bg-rose-600 text-white rounded-full flex items-center justify-center mx-auto text-2xl font-black animate-bounce">
           🔥
@@ -633,22 +633,293 @@
 
   <!-- JAVASCRIPT LOGIC ENGINE -->
   <script>
-    const DEFAULT_PARTS_LIST = [
-      { id: 'oli_mesin', name: 'Oli Mesin', group: 'rutin', intervalMonths: 2, category: 'Mesin', targetType: 'all', icon: '🛢️', approxCost: 65000, hasPosisi: false },
-      { id: 'oli_gardan', name: 'Oli Gardan', group: 'rutin', intervalMonths: 6, category: 'Transmisi', targetType: 'matic', icon: '⚙️', approxCost: 25000, hasPosisi: false },
-      { id: 'servis_cvt', name: 'Servis CVT', group: 'rutin', intervalMonths: 6, category: 'Transmisi', targetType: 'matic', icon: '🛠️', approxCost: 85000, hasPosisi: false },
-      
-      { id: 'ban', name: 'Ban', group: 'satuan', intervalMonths: 24, category: 'Kaki-kaki', targetType: 'all', icon: '🛞', approxCost: 250000, hasPosisi: true },
-      { id: 'vbelt', name: 'V-Belt CVT', group: 'satuan', intervalMonths: 18, category: 'Transmisi', targetType: 'matic', icon: '⛓️', approxCost: 175000, hasPosisi: false },
-      { id: 'aki', name: 'Aki / Battery', group: 'satuan', intervalMonths: 18, category: 'Kelistrikan', targetType: 'all', icon: '🔋', approxCost: 230000, hasPosisi: false },
-      { id: 'kampas_rem', name: 'Kampas Rem', group: 'satuan', intervalMonths: 12, category: 'Pengereman', targetType: 'all', icon: '🛑', approxCost: 65000, hasPosisi: true }
+    const DEFAULT_MOTORS = [
+      {
+        "id": "m_1794199637359",
+        "name": "NMAX Yunus",
+        "type": "Yamaha NMAX Neo S",
+        "category": "matic",
+        "plat": "",
+        "color": "from-emerald-600 to-teal-700",
+        "lastRoutineDate": "2026-10-17",
+        "pajakTahunan": "2027-01-22",
+        "pajakPlat": "2030-01-22"
+      },
+      {
+        "id": "m_1794200395242",
+        "name": "Vario ",
+        "type": "Honda Vario 110 ",
+        "category": "matic",
+        "plat": "B 6626 WKS",
+        "color": "from-blue-600 to-indigo-700",
+        "lastRoutineDate": "2026-11-03",
+        "pajakTahunan": "2026-04-17",
+        "pajakPlat": "2029-04-17"
+      }
     ];
 
-    const DEFAULT_MOTORS = [
-      { id: 'm1', name: 'NMAX', type: 'Yamaha NMAX 155', category: 'matic', plat: 'B 4123 NMX', color: 'from-blue-600 to-indigo-700', lastRoutineDate: '2026-09-10', pajakTahunan: '2026-11-15', pajakPlat: '2029-11-15' },
-      { id: 'm2', name: 'Vario', type: 'Honda Vario 125', category: 'matic', plat: 'B 5678 VAR', color: 'from-rose-600 to-red-700', lastRoutineDate: '2026-08-15', pajakTahunan: '2026-12-05', pajakPlat: '2028-12-05' },
-      { id: 'm3', name: 'Beat', type: 'Honda Beat Street', category: 'matic', plat: 'B 3456 BET', color: 'from-amber-500 to-orange-600', lastRoutineDate: '2026-10-01', pajakTahunan: '2027-03-20', pajakPlat: '2030-03-20' },
-      { id: 'm4', name: 'Vega R', type: 'Yamaha Vega R 110', category: 'bebek', plat: 'B 6789 VEG', color: 'from-emerald-600 to-teal-700', lastRoutineDate: '2026-07-20', pajakTahunan: '2026-11-28', pajakPlat: '2027-11-28' }
+    const DEFAULT_PARTS_LIST = [
+      {
+        "id": "oli_mesin",
+        "name": "Oli Mesin",
+        "group": "rutin",
+        "intervalMonths": 2,
+        "category": "Mesin",
+        "targetType": "all",
+        "icon": "🛢️",
+        "approxCost": 65000,
+        "hasPosisi": false
+      },
+      {
+        "id": "oli_gardan",
+        "name": "Oli Gardan",
+        "group": "rutin",
+        "intervalMonths": 4,
+        "category": "Transmisi",
+        "targetType": "matic",
+        "icon": "⚙️",
+        "approxCost": 25000,
+        "hasPosisi": false
+      },
+      {
+        "id": "servis_cvt",
+        "name": "Servis CVT",
+        "group": "rutin",
+        "intervalMonths": 2,
+        "category": "Transmisi",
+        "targetType": "matic",
+        "icon": "🛠️",
+        "approxCost": 85000,
+        "hasPosisi": false
+      },
+      {
+        "id": "ban",
+        "name": "Ban",
+        "group": "satuan",
+        "intervalMonths": 24,
+        "category": "Kaki-kaki",
+        "targetType": "all",
+        "icon": "🛞",
+        "approxCost": 250000,
+        "hasPosisi": true
+      },
+      {
+        "id": "vbelt",
+        "name": "V-Belt CVT",
+        "group": "satuan",
+        "intervalMonths": 18,
+        "category": "Transmisi",
+        "targetType": "matic",
+        "icon": "⛓️",
+        "approxCost": 175000,
+        "hasPosisi": false
+      },
+      {
+        "id": "aki",
+        "name": "Aki / Battery",
+        "group": "satuan",
+        "intervalMonths": 18,
+        "category": "Kelistrikan",
+        "targetType": "all",
+        "icon": "🔋",
+        "approxCost": 230000,
+        "hasPosisi": false
+      },
+      {
+        "id": "kampas_rem",
+        "name": "Kampas Rem",
+        "group": "satuan",
+        "intervalMonths": 6,
+        "category": "Pengereman",
+        "targetType": "all",
+        "icon": "🛑",
+        "approxCost": 65000,
+        "hasPosisi": true
+      }
+    ];
+
+    const DEFAULT_HEALTH_STATES = {
+      "m_1794199637359": {
+        "ban": {
+          "lastChangedBelakang": "2026-09-16",
+          "lastChangedDepan": "2025-01-22"
+        },
+        "aki": {
+          "lastChangedDate": "2026-10-27"
+        },
+        "oli_mesin": {
+          "lastChangedDate": "2026-10-17"
+        },
+        "oli_gardan": {
+          "lastChangedDate": "2026-10-17"
+        },
+        "servis_cvt": {
+          "lastChangedDate": "2026-10-17"
+        },
+        "vbelt": {
+          "lastChangedDate": "2026-10-17"
+        },
+        "kampas_rem": {
+          "lastChangedDepan": "2026-10-17",
+          "lastChangedBelakang": "2026-10-17"
+        }
+      },
+      "m_1794200395242": {
+        "ban": {
+          "lastChangedDepan": "2025-11-09",
+          "lastChangedBelakang": "2025-11-09"
+        },
+        "oli_mesin": {
+          "lastChangedDate": "2026-11-03"
+        },
+        "oli_gardan": {
+          "lastChangedDate": "2026-11-03"
+        },
+        "servis_cvt": {
+          "lastChangedDate": "2026-11-03"
+        },
+        "vbelt": {
+          "lastChangedDate": "2026-11-09"
+        },
+        "aki": {
+          "lastChangedDate": "2026-11-09"
+        },
+        "kampas_rem": {
+          "lastChangedDepan": "2026-11-09",
+          "lastChangedBelakang": "2026-11-09"
+        }
+      }
+    };
+
+    const DEFAULT_LOGS = [
+      {
+        "id": "log_1794201151919",
+        "motorId": "m_1794199637359",
+        "tipe": "rutin",
+        "isPajakLog": false,
+        "tanggal": "2026-10-17",
+        "bengkel": "Dirumah",
+        "merekPart": "Slider",
+        "posisiChoice": "",
+        "partsChanged": [
+          "Oli Mesin",
+          "Oli Gardan",
+          "Servis CVT"
+        ],
+        "biayaPart": 0,
+        "biayaJasa": 0
+      },
+      {
+        "id": "log_1794201108198",
+        "motorId": "m_1794200395242",
+        "tipe": "rutin",
+        "isPajakLog": false,
+        "tanggal": "2026-11-03",
+        "bengkel": "Shell",
+        "merekPart": "",
+        "posisiChoice": "",
+        "partsChanged": [
+          "Oli Mesin",
+          "Oli Gardan",
+          "Servis CVT"
+        ],
+        "biayaPart": 0,
+        "biayaJasa": 0
+      },
+      {
+        "id": "log_1794201053965",
+        "motorId": "m_1794199637359",
+        "tipe": "rutin",
+        "isPajakLog": false,
+        "tanggal": "2025-11-03",
+        "bengkel": "Shell",
+        "merekPart": "",
+        "posisiChoice": "",
+        "partsChanged": [
+          "Oli Mesin",
+          "Oli Gardan",
+          "Servis CVT"
+        ],
+        "biayaPart": 0,
+        "biayaJasa": 0
+      },
+      {
+        "id": "log_1794200437740",
+        "motorId": "m_1794200395242",
+        "tipe": "insidental",
+        "isPajakLog": false,
+        "tanggal": "2025-11-09",
+        "bengkel": "Planet Ban",
+        "merekPart": "",
+        "posisiChoice": "both",
+        "partsChanged": [
+          "Ban"
+        ],
+        "biayaPart": 0,
+        "biayaJasa": 0
+      },
+      {
+        "id": "log_1794200001462",
+        "motorId": "m_1794199637359",
+        "tipe": "rutin",
+        "isPajakLog": false,
+        "tanggal": "2026-10-17",
+        "bengkel": "Dirumah",
+        "merekPart": "Ganti Slider",
+        "posisiChoice": "",
+        "partsChanged": [
+          "Oli Mesin",
+          "Oli Gardan",
+          "Servis CVT"
+        ],
+        "biayaPart": 0,
+        "biayaJasa": 0
+      },
+      {
+        "id": "log_1794199928375",
+        "motorId": "m_1794199637359",
+        "tipe": "insidental",
+        "isPajakLog": false,
+        "tanggal": "2026-10-27",
+        "bengkel": "Dirumah",
+        "merekPart": "Yuasa",
+        "posisiChoice": "",
+        "partsChanged": [
+          "Aki / Battery"
+        ],
+        "biayaPart": 242000,
+        "biayaJasa": 0
+      },
+      {
+        "id": "log_1794199799066",
+        "motorId": "m_1794199637359",
+        "tipe": "insidental",
+        "isPajakLog": false,
+        "tanggal": "2025-01-22",
+        "bengkel": "-",
+        "merekPart": "-",
+        "posisiChoice": "depan",
+        "partsChanged": [
+          "Ban"
+        ],
+        "biayaPart": 500000,
+        "biayaJasa": 0
+      },
+      {
+        "id": "log_1794199767776",
+        "motorId": "m_1794199637359",
+        "tipe": "insidental",
+        "isPajakLog": false,
+        "tanggal": "2026-09-16",
+        "bengkel": "Pro Ban",
+        "merekPart": "",
+        "posisiChoice": "belakang",
+        "partsChanged": [
+          "Ban"
+        ],
+        "biayaPart": 500000,
+        "biayaJasa": 0
+      }
     ];
 
     let motors = [];
@@ -758,8 +1029,8 @@
 
       motors = storedMotors ? JSON.parse(storedMotors) : DEFAULT_MOTORS;
       partsConfig = storedParts ? JSON.parse(storedParts) : DEFAULT_PARTS_LIST;
-      partHealthStates = storedStates ? JSON.parse(storedStates) : {};
-      serviceLogs = storedLogs ? JSON.parse(storedLogs) : [];
+      partHealthStates = storedStates ? JSON.parse(storedStates) : DEFAULT_HEALTH_STATES;
+      serviceLogs = storedLogs ? JSON.parse(storedLogs) : DEFAULT_LOGS;
 
       if (motors.length > 0 && !selectedGarasiMotorId) {
         selectedGarasiMotorId = motors[0].id;
@@ -1313,6 +1584,11 @@
               <span class="text-slate-400 font-medium">Nominal Pajak:</span>
               <span class="font-extrabold text-emerald-400 text-sm">Rp ${total.toLocaleString('id-ID')}</span>
             </div>
+            <div class="pt-2 flex justify-end">
+              <button onclick="deleteSingleLog('${log.id}')" class="bg-rose-950/60 hover:bg-rose-900 text-rose-300 font-bold px-3 py-1.5 rounded-xl text-[11px] border border-rose-900/50 flex items-center gap-1 transition-all">
+                🗑️ Hapus Riwayat Ini
+              </button>
+            </div>
           `;
         } else {
           div.innerHTML = `
@@ -1342,10 +1618,21 @@
               <span class="text-slate-400 font-medium">Total Biaya:</span>
               <span class="font-extrabold text-emerald-400 text-sm">Rp ${total.toLocaleString('id-ID')}</span>
             </div>
+            <div class="pt-2 flex justify-end">
+              <button onclick="deleteSingleLog('${log.id}')" class="bg-rose-950/60 hover:bg-rose-900 text-rose-300 font-bold px-3 py-1.5 rounded-xl text-[11px] border border-rose-900/50 flex items-center gap-1 transition-all">
+                🗑️ Hapus Riwayat Ini
+              </button>
+            </div>
           `;
         }
         container.appendChild(div);
       });
+    }
+
+    function deleteSingleLog(logId) {
+      serviceLogs = serviceLogs.filter(l => l.id !== logId);
+      saveToLocalStorage();
+      renderAllViews();
     }
 
     function openLightbox(base64Src) {
@@ -1519,7 +1806,7 @@
       const selectServisMotor = document.getElementById('inputServisMotorId');
       const selectFilterMotor = document.getElementById('filterMotorLog');
 
-      selectServisMotor.innerHTML = '';
+      selectServisMotor.innerHTML = '<option value="" disabled selected>-- Pilih Motor --</option>';
       selectFilterMotor.innerHTML = '<option value="ALL">Semua Motor</option>';
 
       motors.forEach(m => {
@@ -1532,9 +1819,15 @@
 
     function renderPartCheckboxesInForm() {
       const motorId = document.getElementById('inputServisMotorId').value;
+      const container = document.getElementById('formPartCheckboxes');
+      
+      if (!motorId) {
+        container.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Silakan pilih motor terlebih dahulu</p>';
+        return;
+      }
+
       const motor = motors.find(m => m.id === motorId);
       const tipeServis = document.querySelector('input[name="tipeServis"]:checked').value;
-      const container = document.getElementById('formPartCheckboxes');
       container.innerHTML = '';
 
       if (!motor) return;
@@ -1603,6 +1896,11 @@
       e.preventDefault();
 
       const motorId = document.getElementById('inputServisMotorId').value;
+      if (!motorId) {
+        alert('Silakan pilih motor terlebih dahulu.');
+        return;
+      }
+
       const tipe = document.querySelector('input[name="tipeServis"]:checked').value;
       const tanggal = document.getElementById('inputServisTanggal').value;
       const bengkel = document.getElementById('inputServisBengkel').value;
@@ -1777,7 +2075,6 @@
       renderAllViews();
     }
 
-    // FACTORY RESET DOUBLE CONFIRMATION HANDLERS
     function openModalResetConfirm() {
       goToResetStep1();
       document.getElementById('modalResetConfirm').classList.remove('hidden');
@@ -1889,7 +2186,8 @@
     }
 
     function openModalCatatServis() { 
-      document.getElementById('modalCatatServis').classList.remove('hidden'); 
+      document.getElementById('modalCatatServis').classList.remove('hidden');
+      document.getElementById('inputServisMotorId').value = "";
       renderPartCheckboxesInForm();
     }
     function closeModalCatatServis() { document.getElementById('modalCatatServis').classList.add('hidden'); }
